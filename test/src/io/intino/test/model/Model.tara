@@ -1,7 +1,112 @@
 dsl Master
 
+// Una Entity se guarda internamente como un mapa de atributos. Con este modelo se definen los getters (atributos que se exponen) y su interpretacion
+// Por cada tipo de entity, habra un mapa id -> entity
+// Todas las entities podrian tener un metodo get(name:String) para obtener de forma generica los atributos
+// Todas las entities deben tener un String id unico para ese tipo de entidad.
 
-Entity Area as ExtensionOf(entity = Place)
-	Attribute type as Word(values = "inner" "outer")
+Entity Employee
+//	Attribute id as Text -> implicito
+	Attribute base as Text
+	Attribute foreman as Text
+	Attribute name as Text
+	Attribute phone as Text
+	Attribute photo as Text
+	Attribute role as Text
+	Attribute area as Entity(Area) // Area es el id del area, pero a la hora de obtenerlo se devuelve el objeto
+	Attribute email as Text
+	Attribute language as Text
+	Attribute enabled as Bool = true // Valor por defecto
+
 Entity Place
+//	Attribute id as Text -> implicito
+
+Entity Country extends Place
+	Attribute name as Text
+	Attribute language as Text
+	Attribute dst as LongInteger List
+	Attribute hasDst as Bool
+	Attribute isDst as Function -> Bool
+
+Entity Area extends Place
+	Attribute type as Word("inner" "outer")
+
+Entity Region extends Place
+	Attribute name as Text
+	Attribute country as Entity(Country)
+	Attribute timeOffset as Decimal
+	Attribute hasDst as Bool
+	Attribute timeOffsetHours as Function -> Integer
+	Attribute timeOffsetMinutes as Function -> Integer
+	Attribute timeOffsetOn as Function(date as Date) -> Decimal
+
+Object GeoPoint
+	Attribute latitude as Decimal
+	Attribute longitude as Decimal
+	Attribute distanceTo as Function(point as GeoPoint) -> Integer
+
+Entity Theater extends Place
+	Attribute address as Text
+    Attribute city as Text
+    Attribute coordinates as Object(GeoPoint)
+    Attribute email as Text = empty
+    Attribute exhibitor as Text
+    Attribute idVista as Text
+    Attribute manager as Text
+    Attribute name as Text
+    Attribute postalCode as Text
+    Attribute region as Region
+    Attribute screens as Text
+    Attribute ipOrder as Text
+    Attribute ipSegment as Text
+    Attribute ipTms as Text
+    Attribute shared as Text
+    Attribute telephone as Text
+    Attribute territory as Text
+    Attribute type as Text
+    Attribute screenList as Function -> Entity(Screen) List
+    Attribute area as Entity(Area)
+    Attribute enabled as Bool = true
+
+Entity Screen extends Place
+	Attribute theater as Theater
+	Attribute seats as Integer
+	Attribute ipOffset as Integer
+	Attribute optimized as Bool = false
+	Attribute type as Word("STANDARD" "LED" "MACRO_XE") = "STANDARD"
+	Attribute tech3D as Word("IMAX" "IMAXbarco" "IMAXchristie" "REALD")
+	Attribute tech4D as Word("_4DX")
+	Attribute setup as Word("STANDARD" "JUNIOR" "PREMIUM") = "STANDARD"
+	Attribute screenDocks as Entity(ScreenDock) = empty
+	Attribute twin as Text
+
+Entity Dock extends Place
+	Attribute ip as Text
+
+Entity ScreenDock extends ScreenDock
+	Attribute screen as Entity(Screen)
+	Attribute category as Word("Player" "Projector" "Lamp")
+	Attribute type as Word("STANDARD" "NONE" "IMAX" "CP2000" "UNTRACEABLE" "LASER" "LED") = "STANDARD"
+
+Entity Depot extends Place
+	Attribute name as Text
+
+Entity Office extends Place
+	Attribute name as Text
+
+Entity Desk extends Place
+	Attribute office as Function -> Entity(Office)
+	Attribute theater as Function -> Entity(Theater)
+
+Entity Asset
+	Attribute sn as Text
+	Attribute type as Text
+	Attribute model as Text
+	Attribute warranty as Text
+	Attribute isGhost as Bool is custom
+
+Entity DualAsset extends Asset
+	Attribute assets as Function -> Entity(Asset) List
+	Attribute missingAssets as Text List
+	Attribute attribute as Function(key as Text) -> Text
 

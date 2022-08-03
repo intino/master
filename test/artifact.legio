@@ -1,8 +1,10 @@
 dsl Legio
 
 Artifact(groupId = "io.intino", version = "1.0.0") test as Solution
-	Model(language = "Master", version = "1.0.0", sdk = "4.1.4")
+	Model("Proteo", "3.4.0", "4.1.1")
+	//Model(language = "Master", version = "1.0.0", sdk = "4.1.4")
 	Imports
+		Compile("com.hazelcast", "hazelcast-all", "4.2.5")
 		Test(groupId = "junit", artifactId = "junit", version = "4.13")
 	Package(mode = ModulesAndLibrariesLinkedByManifest)
 
