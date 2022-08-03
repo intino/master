@@ -36,5 +36,3 @@ Concept Data is abstract
 			var string type = "java.util.Map" is reactive private
 			Concept:{1..1}:RequiresAspect Key extends Data
 			Concept:{1..1}:RequiresAspect Value extends Data
-		sub MultiPart
-			var string type = "io.intino.alexandria.rest.Multipart" is reactive private
