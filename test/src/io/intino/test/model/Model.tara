@@ -1,0 +1,7 @@
+dsl Master
+
+
+Entity Area as ExtensionOf(entity = Place)
+	Attribute type as Word(values = "inner" "outer")
+Entity Place
+
