@@ -103,7 +103,7 @@ Entity Asset
 	Attribute type as Text
 	Attribute model as Text
 	Attribute warranty as Text
-	Attribute isGhost as Bool is custom
+	Attribute isGhost as Function -> Bool
 
 Entity DualAsset extends Asset
 	Attribute assets as Function -> Entity(Asset) List
