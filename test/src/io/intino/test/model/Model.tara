@@ -5,7 +5,7 @@ dsl Master
 // Todas las entities podrian tener un metodo get(name:String) para obtener de forma generica los atributos
 // Todas las entities deben tener un String id unico para ese tipo de entidad.
 
-Entity Employee
+Concept Employee
 //	Attribute id as Text -> implicito
 	Attribute base as Text
 	Attribute foreman as Text
