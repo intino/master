@@ -1,0 +1,11 @@
+dsl Legio
+
+Artifact(groupId = "io.intino.master", version = "1.0.0") builder
+	Imports
+		Test(groupId = "junit", artifactId = "junit", version = "4.13")
+	Package(mode = ModulesAndLibrariesLinkedByManifest)
+
+Repository(identifier = "intino-maven")
+	Release("https://artifactory.intino.io/artifactory/releases")
+
+RunConfiguration local
