@@ -1,0 +1,36 @@
+def type(entity)
+
+	public abstract class Entity {
+
+		protected final String id;
+		protected final IMap<String, String> attributes;
+
+		protected Entity(TriplesRecord record) {
+			this.record = requireNonNull(record);
+		}
+
+		public String id() {
+			return record.id();
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (o == null || getClass() != o.getClass()) return false;
+			Entity entity = (Entity) o;
+			return Objects.equals(id(), entity.id());
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id());
+		}
+
+		@Override
+		public String toString() {
+			return id();
+		}
+	}
+	
+	
+end
