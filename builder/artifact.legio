@@ -1,8 +1,9 @@
 dsl Legio
 
-Artifact(groupId = "io.intino.master", version = "1.0.0") builder
+Artifact("io.intino.master", "1.0.0") builder
 	Imports
-		Test(groupId = "junit", artifactId = "junit", version = "4.13")
+		Compile("io.intino.magritte", "builder-core", "1.0.0")
+		Test("junit", "junit", "4.13")
 	Package(mode = ModulesAndLibrariesLinkedByManifest)
 
 Repository(identifier = "intino-maven")

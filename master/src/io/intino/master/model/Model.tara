@@ -4,6 +4,11 @@ Concept:Named Entity
 	Concept:Named:RequiresAspect Attribute extends Data
 	Aspect ExtensionOf > var Entity entity
 
+Concept:Named Struct
+	Concept:Named:RequiresAspect Attribute extends Data
+	Aspect ExtensionOf > var Struct struct
+
+
 Concept Data is abstract
 	Aspect List
 	Aspect Type
@@ -32,6 +37,8 @@ Concept Data is abstract
 		sub Word
 			var string type = "java.lang.Enum" is reactive private
 			var string[] values;
+		sub Function
+			var string method
 		sub Map
 			var string type = "java.util.Map" is reactive private
 			Concept:{1..1}:RequiresAspect Key extends Data

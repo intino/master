@@ -5,7 +5,7 @@ dsl Master
 // Todas las entities podrian tener un metodo get(name:String) para obtener de forma generica los atributos
 // Todas las entities deben tener un String id unico para ese tipo de entidad.
 
-Concept Employee
+Entity Employee
 //	Attribute id as Text -> implicito
 	Attribute base as Text
 	Attribute foreman as Text
@@ -16,7 +16,7 @@ Concept Employee
 	Attribute area as Entity(Area) // Area es el id del area, pero a la hora de obtenerlo se devuelve el objeto
 	Attribute email as Text
 	Attribute language as Text
-	Attribute enabled as Bool = true // Valor por defecto
+	Attribute enabled as Bool(true) // Valor por defecto
 
 Entity Place
 //	Attribute id as Text -> implicito
@@ -34,15 +34,15 @@ Entity Area extends Place
 Entity Region extends Place
 	Attribute name as Text
 	Attribute country as Entity(Country)
-	Attribute timeOffset as Decimal
+	Attribute timeOffset as Real
 	Attribute hasDst as Bool
 	Attribute timeOffsetHours as Function -> Integer
 	Attribute timeOffsetMinutes as Function -> Integer
-	Attribute timeOffsetOn as Function(date as Date) -> Decimal
+	Attribute timeOffsetOn as Function(date as Date) -> Real
 
-Object GeoPoint
-	Attribute latitude as Decimal
-	Attribute longitude as Decimal
+Struct GeoPoint
+	Attribute latitude as Real
+	Attribute longitude as Real
 	Attribute distanceTo as Function(point as GeoPoint) -> Integer
 
 Entity Theater extends Place
@@ -106,7 +106,12 @@ Entity Asset
 	Attribute isGhost as Function -> Bool
 
 Entity DualAsset extends Asset
-	Attribute assets as Function -> Entity(Asset) List
+	Attribute assets as Function
+		===
+			public List<Asset> assets() {
+				return null;
+			}
+		===
 	Attribute missingAssets as Text List
 	Attribute attribute as Function(key as Text) -> Text
 
