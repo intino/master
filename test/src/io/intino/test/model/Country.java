@@ -7,6 +7,7 @@ import java.util.List;
 
 public class Country extends AbstractCountry {
 
+
     protected Country(TriplesRecord record) {
         super(record);
     }
