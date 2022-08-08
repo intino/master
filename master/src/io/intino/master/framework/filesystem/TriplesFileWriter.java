@@ -1,5 +1,7 @@
 package io.intino.master.framework.filesystem;
 
+import io.intino.master.model.Triple;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;

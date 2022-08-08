@@ -5,6 +5,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 import com.hazelcast.topic.Message;
 import io.intino.alexandria.logger.Logger;
+import io.intino.master.model.Triple;
 
 import java.io.File;
 import java.time.Instant;

@@ -1,12 +1,12 @@
-package io.intino.master.framework.filesystem;
+package io.intino.master.model;
 
 public class Triple {
 
-	public static final String Tab = "\t";
+	public static final String SEPARATOR = "\t";
 	private final String subject, predicate, value;
 
 	public Triple(String line) {
-		this(line.split(Tab, -1));
+		this(line.split(SEPARATOR, -1));
 	}
 
 	public Triple(String[] split) {
@@ -32,11 +32,11 @@ public class Triple {
 	}
 
 	public String predicateValue() {
-		return predicate + Tab + value;
+		return predicate + SEPARATOR + value;
 	}
 
 	@Override
 	public String toString() {
-		return subject + Tab + predicateValue();
+		return subject + SEPARATOR + predicateValue();
 	}
 }

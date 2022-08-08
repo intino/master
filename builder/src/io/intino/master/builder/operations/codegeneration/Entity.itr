@@ -1,36 +1,49 @@
 def type(entity)
+	package io.intino.master.accessor;
 
-	public abstract class Entity {
+	import io.intino.master.model.Triple;
 
-		protected final String id;
-		protected final IMap<String, String> attributes;
+	import java.util.HashMap;
+    import java.util.Map;
+    import java.util.function.BiConsumer;
 
-		protected Entity(TriplesRecord record) {
-			this.record = requireNonNull(record);
+	public class $name+FirstUpperCase extends io.intino.master.model.Entity {
+		private static final Map<String, BiConsumer<$name+FirstUpperCase, Triple>> setters = new HashMap<>() {{
+			$attribute+set...[$NL]
+		}};
+
+		$attribute+field...[$NL]
+
+		public $name+FirstUpperCase(String id) {
+			super(id);
 		}
 
-		public String id() {
-			return record.id();
+		$attribute+getter...[$NL]
+
+		public $name+FirstUpperCase add(Triple triple) {
+			setters.getOrDefault(triple.predicate(), ($name+firstLowerCase, t) -> $name+firstLowerCase.attributes.put(t.predicate(), t.value()))
+					.accept(this, triple);
+			return this;
 		}
 
-		@Override
-		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
-			Entity entity = (Entity) o;
-			return Objects.equals(id(), entity.id());
+		public $name+FirstUpperCase remove(Triple triple) {
+			setters.getOrDefault(triple.predicate(), ($name+firstLowerCase, t) -> $name+firstLowerCase.attributes.put(t.predicate(), null))
+					.accept(this, null);
+			return this;
 		}
+    }
+end
 
-		@Override
-		public int hashCode() {
-			return Objects.hash(id());
-		}
+def trigger(set)
+	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t == null ? null : t.value());
+end
 
-		@Override
-		public String toString() {
-			return id();
-		}
+def trigger(getter)
+	public String $name+firstLowerCase() {
+		return $name+firstLowerCase;
 	}
-	
-	
+end
+
+def trigger(getter)
+	private $type $name+firstLowerCase;
 end
