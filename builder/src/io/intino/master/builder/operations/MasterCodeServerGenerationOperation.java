@@ -1,6 +1,7 @@
 package io.intino.master.builder.operations;
 
 import io.intino.itrules.Frame;
+import io.intino.itrules.FrameBuilder;
 import io.intino.itrules.Template;
 import io.intino.magritte.Language;
 import io.intino.magritte.builder.core.CompilationUnit;
@@ -9,10 +10,10 @@ import io.intino.magritte.builder.core.errorcollection.CompilationFailedExceptio
 import io.intino.magritte.builder.core.operation.model.ModelOperation;
 import io.intino.magritte.builder.model.Model;
 import io.intino.magritte.builder.model.NodeImpl;
-import io.intino.magritte.builder.utils.Format;
 import io.intino.magritte.lang.model.Node;
 import io.intino.master.builder.operations.codegeneration.EntityFrameCreator;
 import io.intino.master.builder.operations.codegeneration.EntityTemplate;
+import io.intino.master.builder.operations.codegeneration.RemoteMasterTemplate;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -22,6 +23,7 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static io.intino.magritte.builder.utils.Format.*;
 import static io.intino.magritte.compiler.shared.TaraBuildConstants.PRESENTABLE_MESSAGE;
 import static java.io.File.separator;
 
@@ -41,7 +43,7 @@ public class MasterCodeServerGenerationOperation extends ModelOperation {
 		this.conf = unit.configuration();
 		this.srcFolder = conf.sourceDirectories().isEmpty() ? null : conf.sourceDirectories().get(0);
 		this.outFolder = conf.getOutDirectory();
-		this.entityTemplate = Format.customize(new EntityTemplate());
+		this.entityTemplate = customize(new EntityTemplate());
 	}
 
 	@Override
@@ -49,6 +51,7 @@ public class MasterCodeServerGenerationOperation extends ModelOperation {
 		try {
 			if (conf.isVerbose()) conf.out().println(prefix() + " Generating Entities...");
 			createEntities(model);
+			createMaster(model);
 			compilationUnit.addOutputItems(outMap);
 			compilationUnit.compilationDifferentialCache().saveCache(model.components().stream().map(c -> ((NodeImpl) c).getHashCode()).collect(Collectors.toList()));
 		} catch (Throwable e) {
@@ -63,12 +66,29 @@ public class MasterCodeServerGenerationOperation extends ModelOperation {
 		outputs.values().forEach(this::writeEntities);
 	}
 
+	private void createMaster(Model model) {
+		final Map<String, Map<String, String>> outputs = createMasterClass(model);
+		fillOutMap(outputs);
+		outputs.values().forEach(this::writeEntities);
+	}
+
 	private Map<String, Map<String, String>> createEntityClasses(Model model) {
 		Map<String, Map<String, String>> outputs = new HashMap<>();
 		model.components().stream()
 				.filter(node -> node.type().equals("Entity") && ((NodeImpl) node).isDirty() && !((NodeImpl) node).isVirtual())
 				.forEach(node -> renderNode(outputs, node, model.language()));
 		return outputs;
+	}
+
+	private Map<String, Map<String, String>> createMasterClass(Model model) {
+		FrameBuilder builder = new FrameBuilder("master").add("package", conf.workingPackage());
+		builder.add("entity", model.components().stream().filter(c -> c.type().equals("Entity")).map(c -> new FrameBuilder("entity").add("name", c.name()).toFrame()).toArray());
+		String qn = conf.workingPackage() + DOT + firstUpperCase().format(javaValidName().format("RemoteMaster").toString());
+		String iQn = conf.workingPackage() + DOT + firstUpperCase().format(javaValidName().format("Master").toString());
+		return Map.of(model.components().get(0).file(),
+				Map.of(destination(qn), customize(new RemoteMasterTemplate()).render(builder.toFrame()),
+				destination(iQn), customize(new RemoteMasterTemplate()).render(builder.add("interface").toFrame()))
+		);
 	}
 
 	private void renderNode(Map<String, Map<String, String>> map, Node node, Language language) {
@@ -80,8 +100,8 @@ public class MasterCodeServerGenerationOperation extends ModelOperation {
 		});
 	}
 
-	private void writeEntities(Map<String, String> layersMap) {
-		for (Map.Entry<String, String> entry : layersMap.entrySet()) {
+	private void writeEntities(Map<String, String> outputsMap) {
+		for (Map.Entry<String, String> entry : outputsMap.entrySet()) {
 			File file = new File(entry.getKey());
 			if (entry.getValue().isEmpty() || isUnderSource(file) && file.exists()) continue;
 			file.getParentFile().mkdirs();
@@ -109,6 +129,10 @@ public class MasterCodeServerGenerationOperation extends ModelOperation {
 	}
 
 	private String destination(String path) {
+		return new File(outFolder, path.replace(DOT, separator) + JAVA).getAbsolutePath();
+	}
+
+	private String destinationInParent(String path) {
 		return new File(outFolder, path.replace(DOT, separator) + JAVA).getAbsolutePath();
 	}
 

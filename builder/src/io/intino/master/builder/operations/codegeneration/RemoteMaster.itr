@@ -1,3 +1,13 @@
+def type(master & interface)
+	package $package;
+
+	import java.util.List;
+
+	public interface Master {
+		$entity+getterSignature...[$NL$NL]
+	}
+end
+
 def type(master)
 	package $package;
 
@@ -10,17 +20,18 @@ def type(master)
     import com.hazelcast.map.listener.EntryEvictedListener;
     import com.hazelcast.map.listener.EntryRemovedListener;
     import com.hazelcast.map.listener.EntryUpdatedListener;
+    import io.intino.master.model.Triple;
 
-    import $package.model.*;
-
-    import java.util.HashMap;
-    import java.util.Map;
-    import java.util.function.BiConsumer;
-    import java.util.function.Consumer;
+	import java.util.ArrayList;
+	import java.util.HashMap;
+	import java.util.List;
+	import java.util.Map;
+	import java.util.function.BiConsumer;
+	import java.util.function.Consumer;
 
 	import static io.intino.master.model.Triple.SEPARATOR;
 
-	public class RemoteMaster {
+	public class RemoteMaster implements Master {
     	private static BiConsumer<String, Triple> publisher;
     	private final Map<String, Consumer<Triple>> removers = new HashMap<>() {{
     		$entity+remover...[$NL]
@@ -29,8 +40,8 @@ def type(master)
     		$entity+adder...[$NL]
     	}};
     	$entity+map...[$NL]
-    	private final IMap<String, Object> hex2subjects;
-    	private final IMap<Object, String> hex2predicates;
+    	private final IMap<String, String> hex2subjects;
+    	private final IMap<String, String> hex2predicates;
 
 
     	public RemoteMaster() {
@@ -41,7 +52,7 @@ def type(master)
     		HazelcastInstance hz = HazelcastClient.newHazelcastClient(config);
     		hex2subjects = hz.getMap("hex2subjects");
     		hex2predicates = hz.getMap("hex2predicates");
-    		IMap<String, Object> master = hz.getMap("master");
+    		IMap<String, String> master = hz.getMap("master");
     		master.forEach((key, value) -> {
     			final String$[] subjectVerb = key.split(SEPARATOR);
     			add(new Triple(hex2subjects.get(subjectVerb$[0]).toString(), hex2predicates.get(subjectVerb$[1]), value));
@@ -53,7 +64,7 @@ def type(master)
     	$entity+getter...[$NL]
 
     	public void publish(String publisher, Triple triple) {
-    		if (publisher != null) publisher.accept(publisher, triple);
+    		if (this.publisher != null) this.publisher.accept(publisher, triple);
     	}
 
     	private void add(Triple triple) {
@@ -72,29 +83,29 @@ def type(master)
     		return triple.subject().split(":")$[1];
     	}
 
-    	public class TripleEntryDispatcher implements EntryAddedListener<String, Object>, EntryUpdatedListener<String, Object>, EntryRemovedListener<String, Object>, EntryEvictedListener<String, Object> {
+    	public class TripleEntryDispatcher implements EntryAddedListener<String, String>, EntryUpdatedListener<String, String>, EntryRemovedListener<String, String>, EntryEvictedListener<String, String> {
 
     		@Override
-    		public void entryAdded(EntryEvent<String, Object> event) {
+    		public void entryAdded(EntryEvent<String, String> event) {
     			add(triple(event));
     		}
 
     		@Override
-    		public void entryUpdated(EntryEvent<String, Object> event) {
+    		public void entryUpdated(EntryEvent<String, String> event) {
     			add(triple(event));
     		}
 
     		@Override
-    		public void entryRemoved(EntryEvent<String, Object> event) {
+    		public void entryRemoved(EntryEvent<String, String> event) {
     			remove(triple(event));
     		}
 
     		@Override
-    		public void entryEvicted(EntryEvent<String, Object> event) {
+    		public void entryEvicted(EntryEvent<String, String> event) {
     			remove(triple(event));
     		}
 
-    		private Triple triple(EntryEvent<String, Object> event) {
+    		private Triple triple(EntryEvent<String, String> event) {
     			final String$[] subjectVerb = event.getKey().split(SEPARATOR);
     			return new Triple(hex2subjects.get(subjectVerb$[0]).toString(), hex2predicates.get(subjectVerb$[1]), event.getValue());
     		}
@@ -117,7 +128,7 @@ end
 
 def trigger(add)
 	private void addTo$name+FirstUpperCase(Triple triple) {
-    	if (!$name+firstLowerCase~Map.containsKey(triple.subject())) $name+firstLowerCase~Map.put(triple.subject(), new $name+FirstUpperCase(triple.subject()));
+    	if (!$name+firstLowerCase~Map.containsKey(triple.subject())) $name+firstLowerCase~Map.put(triple.subject(), new $name+FirstUpperCase(triple.subject(), this));
     	$name+firstLowerCase~Map.get(triple.subject()).add(triple);
     }
 end
@@ -130,10 +141,17 @@ end
 
 def trigger(getter)
 	public $name+FirstUpperCase $name+firstLowerCase(String id) {
-		return $name+firstLowerCaseMap.get(id);
+		return $name+firstLowerCase~Map.get(id);
 	}
 
-	public List<$name+FirstUpperCase> $name+firstLowerCase~List() {
-		return new ArrayList<>($name+firstLowerCaseMap.values());
+	public List<$name+FirstUpperCase> $name+Plural+firstLowerCase() {
+		return new ArrayList<>($name+firstLowerCase~Map.values());
 	}
+end
+
+
+def trigger(getterSignature)
+	public $name+FirstUpperCase $name+firstLowerCase(String id);
+
+	public List<$name+FirstUpperCase> $name+Plural+firstLowerCase();
 end

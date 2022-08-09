@@ -20,13 +20,14 @@ def type(entity & class)
 		private static final Map<String, BiConsumer<$name+FirstUpperCase, Triple>> setters = new HashMap<>() {{
 			[$attribute+set...[$NL]]
 		}};
-
+		private Master master;
 		[$attribute+wordDeclaration...[$NL]]
 
 		[$attribute+field...[$NL]]
 
-		public $name+FirstUpperCase(String id) {
+		public $name+FirstUpperCase(String id, Master master) {
 			super(id);
+			this.master = master;
 		}
 
 		$attribute+getter...[$NL$NL]
