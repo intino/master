@@ -1,5 +1,6 @@
 import io.intino.magritte.builder.utils.FileSystemUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -10,7 +11,7 @@ import java.nio.file.StandardOpenOption;
 
 import static io.intino.master.builder.MastercRunner.main;
 
-
+@Ignore
 public class TaracRunnerTest {
 	private String home;
 

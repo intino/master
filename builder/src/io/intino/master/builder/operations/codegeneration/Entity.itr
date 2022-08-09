@@ -1,13 +1,15 @@
 def type(entity & decorable)
-	package $package;
+	package $package.entities;
 
 	public class $name+FirstUpperCase extends Abstract$name+FirstUpperCase {
-
+		public $name+FirstUpperCase(String id, $package.Master master) {
+			super(id, master);
+		}
 	}
 end
 
 def type(entity & class)
-	package $package;
+	package $package.entities;
 
 	import io.intino.master.model.Triple;
 
@@ -16,16 +18,16 @@ def type(entity & class)
     import java.util.Map;
     import java.util.function.BiConsumer;
 
-	public class $abstract~$name+FirstUpperCase extends io.intino.master.model.Entity {
+	public[ $abstract+firstLowerCase] class $abstract~$name+FirstUpperCase extends io.intino.master.model.Entity {
 		private static final Map<String, BiConsumer<$name+FirstUpperCase, Triple>> setters = new HashMap<>() {{
 			[$attribute+set...[$NL]]
 		}};
-		private Master master;
-		[$attribute+wordDeclaration...[$NL]]
+		private $package.Master master;
 
+		[$attribute+wordDeclaration...[$NL]]
 		[$attribute+field...[$NL]]
 
-		public $name+FirstUpperCase(String id, Master master) {
+		public $abstract~$name+FirstUpperCase(String id, $package.Master master) {
 			super(id);
 			this.master = master;
 		}
@@ -34,56 +36,82 @@ def type(entity & class)
 
 		public $name+FirstUpperCase add(Triple triple) {
 			setters.getOrDefault(triple.predicate(), ($name+firstLowerCase, t) -> $name+firstLowerCase.attributes.put(t.predicate(), t.value()))
-					.accept(this, triple);
-			return this;
+					.accept(($name+FirstUpperCase) this, triple);
+			return ($name+FirstUpperCase) this;
 		}
 
 		public $name+FirstUpperCase remove(Triple triple) {
 			setters.getOrDefault(triple.predicate(), ($name+firstLowerCase, t) -> $name+firstLowerCase.attributes.put(t.predicate(), null))
-					.accept(this, null);
-			return this;
+					.accept(($name+FirstUpperCase) this, null);
+			return ($name+FirstUpperCase) this;
 		}
     }
 end
 
 def type(boolean) trigger(set)
-	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t == null ? null : Boolean.parseBoolean(t.value()));
+	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t.value() == null ? null : Boolean.parseBoolean(t.value()));
 end
 
 def type(integer) trigger(set)
-	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t == null ? null : Integer.parseInt(t.value()));
+	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t.value() == null ? null : Integer.parseInt(t.value()));
 end
 
 def type(real) trigger(set)
-	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t == null ? null : Double.parseDouble(t.value()));
+	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t.value() == null ? null : Double.parseDouble(t.value()));
 end
 
 def type(long) trigger(set)
-	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t == null ? null : Long.parseLong(t.value()));
+	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t.value() == null ? null : Long.parseLong(t.value()));
 end
 
 def type(word) trigger(set)
-	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t == null ? null : $type+firstUpperCase.valueOf(t.value()));
+	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t.value() == null ? null : $type+firstUpperCase.valueOf(t.value()));
 end
 
 def type(string) trigger(set)
-	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t == null ? null : t.value());
+	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t.value());
+end
+
+def type(struct) trigger(set)
+	put("$name", ($owner+firstLowerCase, t) -> {
+		if (t.value() == null) $owner+firstLowerCase.$name+firstLowerCase = null;
+		else {
+			List<String> values = java.util.Arrays.stream(t.value().split(",", -1)).map(v -> v.trim()).collect(java.util.stream.Collectors.toList());
+			$owner+firstLowerCase.$name+firstLowerCase = t.value() == null ? null : $struct+call;
+		}
+	});
 end
 
 def type(word) trigger(wordDeclaration)
-	public enum $name+firstUpperCase {
-		$value...[, ];
-	}
+	public enum $name+firstUpperCase { $value...[, ]}
+end
+
+def type(struct) trigger(field)
+	protected $package.structs.$struct+structName $name+firstLowerCase[ = $defaultValue];
 end
 
 def !type(entity) trigger(field)
-	private $type $name+firstLowerCase [= $defaultValue];
+	protected $type $name+firstLowerCase[ = $defaultValue];
+end
+
+def type(word) trigger(defaultValue)
+	$type.$value
+end
+
+def trigger(defaultValue)
+	$value
+end
+
+def type(struct) trigger(getter)
+	public $package.structs.$struct+structName $name+firstLowerCase() {
+		return this.$name+firstLowerCase;
+	}
 end
 
 
 def type(entity) trigger(getter)
-	public $name+firstUpperCase $name+firstLowerCase() {
-		return master.$name+firstLowerCase(attributes.get("$name+firstLowerCase"));
+	public $entity+firstUpperCase $name+firstLowerCase() {
+		return master.$entity+firstLowerCase(attributes.get("$name+firstLowerCase"));
 	}
 end
 
@@ -96,4 +124,28 @@ end
 
 def trigger(abstract)
 	Abstract
+end
+
+def trigger(structName)
+	$name+firstUpperCase
+end
+
+def trigger(call)
+	new $package.structs.$name+firstUpperCase($attribute+parse...[, ])
+end
+
+def type(boolean) trigger(parse)
+	Boolean.parseBoolean(values.get($index))
+end
+
+def type(int) trigger(parse)
+	Integer.parseInt(values.get($index))
+end
+
+def type(double) trigger(parse)
+	Double.parseDouble(values.get($index))
+end
+
+def trigger(parse)
+	values.get($index)
 end

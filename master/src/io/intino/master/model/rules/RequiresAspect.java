@@ -8,7 +8,6 @@ public class RequiresAspect implements NodeRule {
 		return !node.appliedAspects().isEmpty();
 	}
 
-
 	@Override
 	public String errorMessage() {
 		return "This concept must have declared with an aspect";

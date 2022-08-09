@@ -3,6 +3,7 @@ package io.intino.master.builder.operations.codegeneration;
 
 import io.intino.itrules.Frame;
 import io.intino.itrules.FrameBuilder;
+import io.intino.magritte.Language;
 import io.intino.magritte.builder.core.CompilerConfiguration;
 import io.intino.magritte.lang.model.Aspect;
 import io.intino.magritte.lang.model.Node;
@@ -15,7 +16,7 @@ import java.util.Map;
 import static io.intino.magritte.builder.utils.Format.firstUpperCase;
 import static io.intino.magritte.builder.utils.Format.javaValidName;
 
-public class EntityFrameCreator {
+public class StructFrameCreator {
 	private static final String DOT = ".";
 	private static final Map<String, String> types = Map.of(
 			"String", "String",
@@ -35,21 +36,21 @@ public class EntityFrameCreator {
 			"Long", "List<Long>"
 	);
 	private final CompilerConfiguration conf;
+	private final Language language;
 
-	public EntityFrameCreator(CompilerConfiguration conf) {
+	public StructFrameCreator(CompilerConfiguration conf, Language language) {
 		this.conf = conf;
+		this.language = language;
 	}
 
 	public Map<String, Frame> create(Node node) {
 		Map<String, Frame> map = new HashMap<>(4);
-		map.put(calculateEntityPath(node, conf.workingPackage()), frameOf(node).toFrame());
-		if (node.is(Tag.Decorable))
-			map.put(calculateDecorableEntityPath(node, conf.workingPackage()), frameOf(node).add("decorable").toFrame());
+		map.put(calculateStructPath(node, conf.workingPackage()), frameOf(node).toFrame());
 		return map;
 	}
 
 	private FrameBuilder frameOf(Node node) {
-		FrameBuilder builder = new FrameBuilder("entity", "class")
+		FrameBuilder builder = new FrameBuilder("struct", "class")
 				.add("package", conf.workingPackage())
 				.add("name", node.name())
 				.add("attribute", node.components().stream().map(this::attrFrameOf).toArray());
@@ -57,29 +58,18 @@ public class EntityFrameCreator {
 		return builder;
 	}
 
-	private Frame attrFrameOf(Node node) {
+	private Frame attrFrameOf(Node c) {
 		FrameBuilder builder = new FrameBuilder().add("attribute");
-		node.appliedAspects().forEach(aspect -> builder.add(aspect.type()));
-		String type = type(node);
-		builder.add("name", node.name()).add("owner", node.container().name()).add("type", type).add("package", conf.workingPackage());
-		builder.add("index", node.container().components().indexOf(node));
-		Parameter values = parameter(node, "values");
+		c.appliedAspects().forEach(aspect -> builder.add(aspect.type()));
+		String type = type(c);
+		builder.add("name", c.name()).add("owner", c.container().name()).add("type", type);
+		Parameter values = parameter(c, "values");
 		if (values != null) builder.add("value", values.values().stream().map(Object::toString).toArray());
-		Parameter defaultValue = parameter(node, "defaultValue");
-		if (defaultValue != null) builder.add("defaultValue", defaultValue(node, type, defaultValue));
-		Parameter entity = parameter(node, "entity");
+		Parameter defaultValue = parameter(c, "defaultValue");
+		if (defaultValue != null) builder.add("defaultValue", defaultValue(c, type, defaultValue));
+		Parameter entity = parameter(c, "entity");
 		if (entity != null) builder.add("entity", ((Node) entity.values().get(0)).name());
-		Parameter struct = parameter(node, "struct");
-		if (struct != null) builder.add("struct", structFrame(((Node) struct.values().get(0))));
 		return builder.toFrame();
-	}
-
-	private Frame structFrame(Node node) {
-		return new FrameBuilder("struct")
-				.add("name", node.name())
-				.add("package", conf.workingPackage())
-				.add("attribute", node.components().stream().map(this::attrFrameOf).toArray())
-				.toFrame();
 	}
 
 	private Frame defaultValue(Node c, String type, Parameter defaultValue) {
@@ -102,11 +92,7 @@ public class EntityFrameCreator {
 		return c.parameters().stream().filter(p -> p.name().equals(name)).findFirst().orElse(null);
 	}
 
-	private String calculateEntityPath(Node node, String aPackage) {
-		return aPackage + DOT + "entities" + DOT + (node.is(Tag.Decorable) ? "Abstract" : "") + firstUpperCase().format(javaValidName().format(node.name()).toString());
-	}
-
-	private String calculateDecorableEntityPath(Node node, String aPackage) {
-		return aPackage + DOT + "entities" + DOT + firstUpperCase().format(javaValidName().format(node.name()).toString());
+	private String calculateStructPath(Node node, String aPackage) {
+		return aPackage + DOT + "structs" + DOT + firstUpperCase().format(javaValidName().format(node.name()).toString());
 	}
 }

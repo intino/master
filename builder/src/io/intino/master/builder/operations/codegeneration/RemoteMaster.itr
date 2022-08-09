@@ -2,6 +2,7 @@ def type(master & interface)
 	package $package;
 
 	import java.util.List;
+	import $package.entities.*;
 
 	public interface Master {
 		$entity+getterSignature...[$NL$NL]
@@ -21,6 +22,8 @@ def type(master)
     import com.hazelcast.map.listener.EntryRemovedListener;
     import com.hazelcast.map.listener.EntryUpdatedListener;
     import io.intino.master.model.Triple;
+
+	import $package.entities.*;
 
 	import java.util.ArrayList;
 	import java.util.HashMap;

@@ -12,7 +12,7 @@ Concept Data is abstract
 	Aspect List
 	Aspect Type
 		var string type is reactive private
-		sub Real
+		sub Double
 			var double defaultValue = empty
 		sub Integer
 			var integer defaultValue = empty

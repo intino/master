@@ -19,12 +19,16 @@ Entity Employee
 
 Entity Place
 
-Entity Country as ExtensionOf(Place)
+Entity Country as ExtensionOf(Place) is decorable
 	Attribute name as String
 	Attribute language as String
-	Attribute dst as Long List
+	Attribute dst as Struct(Dst)
 	Attribute hasDst as Boolean
 //	Attribute isDst as Function -> Bool
+
+Struct Dst
+	Attribute from as String
+	Attribute to as String
 
 Entity Area  as ExtensionOf(Place)
 	Attribute type as Word("inner" "outer")
@@ -32,15 +36,15 @@ Entity Area  as ExtensionOf(Place)
 Entity Region as ExtensionOf(Place)
 	Attribute name as String
 	Attribute country as Entity(Country)
-	Attribute timeOffset as Real
+	Attribute timeOffset as Double
 	Attribute hasDst as Boolean
 //	Attribute timeOffsetHours as Function -> Integer
 //	Attribute timeOffsetMinutes as Function -> Integer
-//	Attribute timeOffsetOn as Function(date as Date) -> Real
+//	Attribute timeOffsetOn as Function(date as Date) -> Double
 
 Struct GeoPoint
-	Attribute latitude as Real
-	Attribute longitude as Real
+	Attribute latitude as Double
+	Attribute longitude as Double
 //	Attribute distanceTo as Function(point as GeoPoint) -> Integer
 
 Entity Theater as ExtensionOf(Place)

@@ -1,0 +1,31 @@
+def type(struct)
+	package $package.structs;
+
+	public class $name+FirstUpperCase {
+		$attribute+field...[$NL]
+
+		public $name+FirstUpperCase($attribute+parameter...[, ]) {
+			$attribute+assign...[$NL]
+		}
+
+		$attribute+getter...[$NL$NL]
+	}
+end
+
+def trigger(getter)
+	public $type $name+firstLowerCase() {
+		return $name+firstLowerCase;
+	}
+end
+
+def trigger(assign)
+	this.$name+firstLowerCase = $name+firstLowerCase;
+end
+
+def trigger(field)
+	private final $type $name+firstLowerCase;
+end
+
+def trigger(parameter)
+	$type $name+firstLowerCase
+end

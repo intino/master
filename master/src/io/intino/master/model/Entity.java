@@ -14,4 +14,9 @@ public class Entity {
 	public String id() {
 		return id;
 	}
+
+
+	public long parseLong(String value) {
+		return Long.parseLong(value);
+	}
 }
