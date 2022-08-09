@@ -132,10 +132,6 @@ public class MasterCodeServerGenerationOperation extends ModelOperation {
 		return new File(outFolder, path.replace(DOT, separator) + JAVA).getAbsolutePath();
 	}
 
-	private String destinationInParent(String path) {
-		return new File(outFolder, path.replace(DOT, separator) + JAVA).getAbsolutePath();
-	}
-
 	private void fillOutMap(Map<String, Map<String, String>> map) {
 		for (Map.Entry<String, Map<String, String>> entry : map.entrySet())
 			for (String out : entry.getValue().keySet()) if (!isUnderSource(new File(out))) put(entry.getKey(), out);
