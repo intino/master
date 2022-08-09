@@ -1,4 +1,4 @@
-package io.intino.master.framework.filesystem;
+package io.intino.master.file;
 
 import java.io.File;
 import java.util.Arrays;

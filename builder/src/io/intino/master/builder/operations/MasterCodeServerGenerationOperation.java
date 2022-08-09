@@ -2,6 +2,7 @@ package io.intino.master.builder.operations;
 
 import io.intino.itrules.Frame;
 import io.intino.itrules.Template;
+import io.intino.magritte.Language;
 import io.intino.magritte.builder.core.CompilationUnit;
 import io.intino.magritte.builder.core.CompilerConfiguration;
 import io.intino.magritte.builder.core.errorcollection.CompilationFailedException;
@@ -10,7 +11,6 @@ import io.intino.magritte.builder.model.Model;
 import io.intino.magritte.builder.model.NodeImpl;
 import io.intino.magritte.builder.utils.Format;
 import io.intino.magritte.lang.model.Node;
-import io.intino.magritte.lang.model.Tag;
 import io.intino.master.builder.operations.codegeneration.EntityFrameCreator;
 import io.intino.master.builder.operations.codegeneration.EntityTemplate;
 
@@ -66,16 +66,18 @@ public class MasterCodeServerGenerationOperation extends ModelOperation {
 	private Map<String, Map<String, String>> createEntityClasses(Model model) {
 		Map<String, Map<String, String>> outputs = new HashMap<>();
 		model.components().stream()
-				.filter(node -> !node.is(Tag.Instance) && ((NodeImpl) node).isDirty() && !((NodeImpl) node).isVirtual())
-				.forEach(node -> renderNode(outputs, model, node));
+				.filter(node -> node.type().equals("Entity") && ((NodeImpl) node).isDirty() && !((NodeImpl) node).isVirtual())
+				.forEach(node -> renderNode(outputs, node, model.language()));
 		return outputs;
 	}
 
-	private void renderNode(Map<String, Map<String, String>> map, Model model, Node node) {
-		Map.Entry<String, Frame> entityFrame = new EntityFrameCreator(conf, node.languageName(), model).create(node);
+	private void renderNode(Map<String, Map<String, String>> map, Node node, Language language) {
+		Map<String, Frame> frames = new EntityFrameCreator(conf, language).create(node);
 		if (!map.containsKey(node.file())) map.put(node.file(), new LinkedHashMap<>());
-		String destination = destination(entityFrame);
-		map.get(node.file()).put(destination, !isModified(node) && new File(destination).exists() ? "" : entityTemplate.render(entityFrame.getValue()));
+		frames.forEach((path, frame) -> {
+			String destination = destination(path);
+			map.get(node.file()).put(destination, !isModified(node) && new File(destination).exists() ? "" : entityTemplate.render(frame));
+		});
 	}
 
 	private void writeEntities(Map<String, String> layersMap) {
@@ -106,8 +108,8 @@ public class MasterCodeServerGenerationOperation extends ModelOperation {
 		return compilationUnit.compilationDifferentialCache().isModified((NodeImpl) node);
 	}
 
-	private String destination(Map.Entry<String, Frame> layerFrameMap) {
-		return new File(outFolder, layerFrameMap.getKey().replace(DOT, separator) + JAVA).getAbsolutePath();
+	private String destination(String path) {
+		return new File(outFolder, path.replace(DOT, separator) + JAVA).getAbsolutePath();
 	}
 
 	private void fillOutMap(Map<String, Map<String, String>> map) {

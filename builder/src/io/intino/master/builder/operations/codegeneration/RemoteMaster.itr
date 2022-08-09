@@ -1,4 +1,139 @@
-def type()
-	
-	
+def type(master)
+	package $package;
+
+	import com.hazelcast.client.HazelcastClient;
+    import com.hazelcast.client.config.ClientConfig;
+    import com.hazelcast.core.EntryEvent;
+    import com.hazelcast.core.HazelcastInstance;
+    import com.hazelcast.map.IMap;
+    import com.hazelcast.map.listener.EntryAddedListener;
+    import com.hazelcast.map.listener.EntryEvictedListener;
+    import com.hazelcast.map.listener.EntryRemovedListener;
+    import com.hazelcast.map.listener.EntryUpdatedListener;
+
+    import $package.model.*;
+
+    import java.util.HashMap;
+    import java.util.Map;
+    import java.util.function.BiConsumer;
+    import java.util.function.Consumer;
+
+	import static io.intino.master.model.Triple.SEPARATOR;
+
+	public class RemoteMaster {
+    	private static BiConsumer<String, Triple> publisher;
+    	private final Map<String, Consumer<Triple>> removers = new HashMap<>() {{
+    		$entity+remover...[$NL]
+    	}};
+    	private final Map<String, Consumer<Triple>> adders = new HashMap<>() {{
+    		$entity+adder...[$NL]
+    	}};
+    	$entity+map...[$NL]
+    	private final IMap<String, Object> hex2subjects;
+    	private final IMap<Object, String> hex2predicates;
+
+
+    	public RemoteMaster() {
+    		this(new ClientConfig());
+    	}
+
+    	public RemoteMaster(ClientConfig config) {
+    		HazelcastInstance hz = HazelcastClient.newHazelcastClient(config);
+    		hex2subjects = hz.getMap("hex2subjects");
+    		hex2predicates = hz.getMap("hex2predicates");
+    		IMap<String, Object> master = hz.getMap("master");
+    		master.forEach((key, value) -> {
+    			final String$[] subjectVerb = key.split(SEPARATOR);
+    			add(new Triple(hex2subjects.get(subjectVerb$[0]).toString(), hex2predicates.get(subjectVerb$[1]), value));
+    		});
+    		master.addEntryListener(new TripleEntryDispatcher(), true);
+    		publisher = (publisher, triple) -> hz.getTopic("request").publish(publisher + ":" + triple.toString());
+    	}
+
+    	$entity+getter...[$NL]
+
+    	public void publish(String publisher, Triple triple) {
+    		if (publisher != null) publisher.accept(publisher, triple);
+    	}
+
+    	private void add(Triple triple) {
+    		adders.getOrDefault(typeOf(triple), t -> {}).accept(triple);
+    	}
+
+    	private void remove(Triple triple) {
+    		removers.getOrDefault(typeOf(triple), t -> {}).accept(triple);
+    	}
+
+    	$entity+add...[$NL$NL]
+
+    	$entity+remove...[$NL$NL]
+
+    	private String typeOf(Triple triple) {
+    		return triple.subject().split(":")$[1];
+    	}
+
+    	public class TripleEntryDispatcher implements EntryAddedListener<String, Object>, EntryUpdatedListener<String, Object>, EntryRemovedListener<String, Object>, EntryEvictedListener<String, Object> {
+
+    		@Override
+    		public void entryAdded(EntryEvent<String, Object> event) {
+    			add(triple(event));
+    		}
+
+    		@Override
+    		public void entryUpdated(EntryEvent<String, Object> event) {
+    			add(triple(event));
+    		}
+
+    		@Override
+    		public void entryRemoved(EntryEvent<String, Object> event) {
+    			remove(triple(event));
+    		}
+
+    		@Override
+    		public void entryEvicted(EntryEvent<String, Object> event) {
+    			remove(triple(event));
+    		}
+
+    		private Triple triple(EntryEvent<String, Object> event) {
+    			final String$[] subjectVerb = event.getKey().split(SEPARATOR);
+    			return new Triple(hex2subjects.get(subjectVerb$[0]).toString(), hex2predicates.get(subjectVerb$[1]), event.getValue());
+    		}
+    	}
+    }
+end
+
+def trigger(remover)
+	put("$name", RemoteMaster.this::removeFrom$name+FirstUpperCase);
+end
+
+
+def trigger(adder)
+	put("$name", RemoteMaster.this::addTo$name+FirstUpperCase);
+end
+
+def trigger(map)
+	private final Map<String, $name+FirstUpperCase> $name+FirstLowerCase~Map = new HashMap<>();
+end
+
+def trigger(add)
+	private void addTo$name+FirstUpperCase(Triple triple) {
+    	if (!$name+firstLowerCase~Map.containsKey(triple.subject())) $name+firstLowerCase~Map.put(triple.subject(), new $name+FirstUpperCase(triple.subject()));
+    	$name+firstLowerCase~Map.get(triple.subject()).add(triple);
+    }
+end
+
+def trigger(remove)
+	private void removeFrom$name+FirstUpperCase(Triple triple) {
+		$name+firstLowerCase~Map.computeIfPresent(triple.subject(), (k, v) -> v.remove(triple));
+	}
+end
+
+def trigger(getter)
+	public $name+FirstUpperCase $name+firstLowerCase(String id) {
+		return $name+firstLowerCaseMap.get(id);
+	}
+
+	public List<$name+FirstUpperCase> $name+firstLowerCase~List() {
+		return new ArrayList<>($name+firstLowerCaseMap.values());
+	}
 end

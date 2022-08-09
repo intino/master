@@ -6,112 +6,110 @@ dsl Master
 // Todas las entities deben tener un String id unico para ese tipo de entidad.
 
 Entity Employee
-//	Attribute id as Text -> implicito
-	Attribute base as Text
-	Attribute foreman as Text
-	Attribute name as Text
-	Attribute phone as Text
-	Attribute photo as Text
-	Attribute role as Text
+	Attribute base as String
+	Attribute foreman as String
+	Attribute name as String
+	Attribute phone as String
+	Attribute photo as String
+	Attribute role as String
 	Attribute area as Entity(Area) // Area es el id del area, pero a la hora de obtenerlo se devuelve el objeto
-	Attribute email as Text
-	Attribute language as Text
-	Attribute enabled as Bool(true) // Valor por defecto
+	Attribute email as String
+	Attribute language as String
+	Attribute enabled as Boolean(true) // Valor por defecto
 
 Entity Place
-//	Attribute id as Text -> implicito
 
-Entity Country extends Place
-	Attribute name as Text
-	Attribute language as Text
-	Attribute dst as LongInteger List
-	Attribute hasDst as Bool
-	Attribute isDst as Function -> Bool
+Entity Country as ExtensionOf(Place)
+	Attribute name as String
+	Attribute language as String
+	Attribute dst as Long List
+	Attribute hasDst as Boolean
+//	Attribute isDst as Function -> Bool
 
-Entity Area extends Place
+Entity Area  as ExtensionOf(Place)
 	Attribute type as Word("inner" "outer")
 
-Entity Region extends Place
-	Attribute name as Text
+Entity Region as ExtensionOf(Place)
+	Attribute name as String
 	Attribute country as Entity(Country)
 	Attribute timeOffset as Real
-	Attribute hasDst as Bool
-	Attribute timeOffsetHours as Function -> Integer
-	Attribute timeOffsetMinutes as Function -> Integer
-	Attribute timeOffsetOn as Function(date as Date) -> Real
+	Attribute hasDst as Boolean
+//	Attribute timeOffsetHours as Function -> Integer
+//	Attribute timeOffsetMinutes as Function -> Integer
+//	Attribute timeOffsetOn as Function(date as Date) -> Real
 
 Struct GeoPoint
 	Attribute latitude as Real
 	Attribute longitude as Real
-	Attribute distanceTo as Function(point as GeoPoint) -> Integer
+//	Attribute distanceTo as Function(point as GeoPoint) -> Integer
 
-Entity Theater extends Place
-	Attribute address as Text
-    Attribute city as Text
-    Attribute coordinates as Object(GeoPoint)
-    Attribute email as Text = empty
-    Attribute exhibitor as Text
-    Attribute idVista as Text
-    Attribute manager as Text
-    Attribute name as Text
-    Attribute postalCode as Text
-    Attribute region as Region
-    Attribute screens as Text
-    Attribute ipOrder as Text
-    Attribute ipSegment as Text
-    Attribute ipTms as Text
-    Attribute shared as Text
-    Attribute telephone as Text
-    Attribute territory as Text
-    Attribute type as Text
-    Attribute screenList as Function -> Entity(Screen) List
+Entity Theater as ExtensionOf(Place)
+	Attribute address as String
+    Attribute city as String
+    Attribute coordinates as Struct(GeoPoint)
+    Attribute email as String
+    Attribute exhibitor as String
+    Attribute idVista as String
+    Attribute manager as String
+    Attribute name as String
+    Attribute postalCode as String
+    Attribute region as Entity(Region)
+    Attribute screens as String
+    Attribute ipOrder as String
+    Attribute ipSegment as String
+    Attribute ipTms as String
+    Attribute shared as String
+    Attribute telephone as String
+    Attribute territory as String
+    Attribute type as String
+//    Attribute screenList as Function -> Entity(Screen) List
     Attribute area as Entity(Area)
-    Attribute enabled as Bool = true
+    Attribute enabled as Boolean(defaultValue= true)
 
-Entity Screen extends Place
-	Attribute theater as Theater
+Entity Screen as ExtensionOf(Place)
+	Attribute theater as Entity(Theater)
 	Attribute seats as Integer
 	Attribute ipOffset as Integer
-	Attribute optimized as Bool = false
-	Attribute type as Word("STANDARD" "LED" "MACRO_XE") = "STANDARD"
+	Attribute optimized as Boolean(defaultValue = false)
+	Attribute type as Word("STANDARD" "LED" "MACRO_XE", defaultValue = "STANDARD")
 	Attribute tech3D as Word("IMAX" "IMAXbarco" "IMAXchristie" "REALD")
 	Attribute tech4D as Word("_4DX")
-	Attribute setup as Word("STANDARD" "JUNIOR" "PREMIUM") = "STANDARD"
-	Attribute screenDocks as Entity(ScreenDock) = empty
-	Attribute twin as Text
+	Attribute setup as Word("STANDARD" "JUNIOR" "PREMIUM", defaultValue = "STANDARD")
+	Attribute screenDocks as Entity(ScreenDock)
+	Attribute twin as String
 
-Entity Dock extends Place
-	Attribute ip as Text
+Entity Dock as ExtensionOf(Place)
+	Attribute ip as String
 
-Entity ScreenDock extends ScreenDock
+Entity ScreenDock as ExtensionOf(Dock)
 	Attribute screen as Entity(Screen)
 	Attribute category as Word("Player" "Projector" "Lamp")
-	Attribute type as Word("STANDARD" "NONE" "IMAX" "CP2000" "UNTRACEABLE" "LASER" "LED") = "STANDARD"
+	Attribute type as Word("STANDARD" "NONE" "IMAX" "CP2000" "UNTRACEABLE" "LASER" "LED", defaultValue = "STANDARD")
 
-Entity Depot extends Place
-	Attribute name as Text
+Entity Depot as ExtensionOf(Place)
+	Attribute name as String
 
-Entity Office extends Place
-	Attribute name as Text
+Entity Office as ExtensionOf(Place)
+	Attribute name as String
 
-Entity Desk extends Place
-	Attribute office as Function -> Entity(Office)
-	Attribute theater as Function -> Entity(Theater)
+Entity Desk as ExtensionOf(Place)
+//	Attribute office as Function -> Entity(Office)
+//	Attribute theater as Function -> Entity(Theater)
 
 Entity Asset
-	Attribute sn as Text
-	Attribute type as Text
-	Attribute model as Text
-	Attribute warranty as Text
-	Attribute isGhost as Function -> Bool
+	Attribute sn as String
+	Attribute type as String
+	Attribute model as String
+	Attribute warranty as String
+//	Attribute isGhost as Function -> Bool
 
-Entity DualAsset extends Asset
-	Attribute assets as Function
-		===
-			public List<Asset> assets() {
-				return null;
-			}
-		===
-	Attribute missingAssets as Text List
-	Attribute attribute as Function(key as Text) -> Text
+Entity DualAsset as ExtensionOf(Asset)
+//	Attribute assets as Function
+//		===
+//			public List<Asset> assets() {
+//				return null;
+//			}
+//		===
+//	Attribute missingAssets as String List
+//	Attribute attribute as Function(key as String) -> String
 

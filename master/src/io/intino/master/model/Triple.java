@@ -1,7 +1,6 @@
 package io.intino.master.model;
 
 public class Triple {
-
 	public static final String SEPARATOR = "\t";
 	private final String subject, predicate, value;
 
@@ -31,12 +30,8 @@ public class Triple {
 		return value;
 	}
 
-	public String predicateValue() {
-		return predicate + SEPARATOR + value;
-	}
-
 	@Override
 	public String toString() {
-		return subject + SEPARATOR + predicateValue();
+		return subject + SEPARATOR + predicate + SEPARATOR + value;
 	}
 }

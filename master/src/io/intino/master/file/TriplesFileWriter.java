@@ -1,4 +1,4 @@
-package io.intino.master.framework.filesystem;
+package io.intino.master.file;
 
 import io.intino.master.model.Triple;
 

@@ -1,24 +1,35 @@
-def type(entity)
-	package io.intino.master.accessor;
+def type(entity & decorable)
+	package $package;
+
+	public class $name+FirstUpperCase extends Abstract$name+FirstUpperCase {
+
+	}
+end
+
+def type(entity & class)
+	package $package;
 
 	import io.intino.master.model.Triple;
 
+	import java.util.List;
 	import java.util.HashMap;
     import java.util.Map;
     import java.util.function.BiConsumer;
 
-	public class $name+FirstUpperCase extends io.intino.master.model.Entity {
+	public class $abstract~$name+FirstUpperCase extends io.intino.master.model.Entity {
 		private static final Map<String, BiConsumer<$name+FirstUpperCase, Triple>> setters = new HashMap<>() {{
-			$attribute+set...[$NL]
+			[$attribute+set...[$NL]]
 		}};
 
-		$attribute+field...[$NL]
+		[$attribute+wordDeclaration...[$NL]]
+
+		[$attribute+field...[$NL]]
 
 		public $name+FirstUpperCase(String id) {
 			super(id);
 		}
 
-		$attribute+getter...[$NL]
+		$attribute+getter...[$NL$NL]
 
 		public $name+FirstUpperCase add(Triple triple) {
 			setters.getOrDefault(triple.predicate(), ($name+firstLowerCase, t) -> $name+firstLowerCase.attributes.put(t.predicate(), t.value()))
@@ -34,16 +45,54 @@ def type(entity)
     }
 end
 
-def trigger(set)
+def type(boolean) trigger(set)
+	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t == null ? null : Boolean.parseBoolean(t.value()));
+end
+
+def type(integer) trigger(set)
+	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t == null ? null : Integer.parseInt(t.value()));
+end
+
+def type(real) trigger(set)
+	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t == null ? null : Double.parseDouble(t.value()));
+end
+
+def type(long) trigger(set)
+	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t == null ? null : Long.parseLong(t.value()));
+end
+
+def type(word) trigger(set)
+	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t == null ? null : $type+firstUpperCase.valueOf(t.value()));
+end
+
+def type(string) trigger(set)
 	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t == null ? null : t.value());
 end
 
-def trigger(getter)
-	public String $name+firstLowerCase() {
-		return $name+firstLowerCase;
+def type(word) trigger(wordDeclaration)
+	public enum $name+firstUpperCase {
+		$value...[, ];
+	}
+end
+
+def !type(entity) trigger(field)
+	private $type $name+firstLowerCase [= $defaultValue];
+end
+
+
+def type(entity) trigger(getter)
+	public $name+firstUpperCase $name+firstLowerCase() {
+		return master.$name+firstLowerCase(attributes.get("$name+firstLowerCase"));
 	}
 end
 
 def trigger(getter)
-	private $type $name+firstLowerCase;
+	public $type $name+firstLowerCase() {
+		return $name+firstLowerCase;
+	}
+end
+
+
+def trigger(abstract)
+	Abstract
 end

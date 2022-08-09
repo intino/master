@@ -1,4 +1,4 @@
-package io.intino.master.framework.filesystem;
+package io.intino.master.file;
 
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
@@ -11,54 +11,36 @@ import java.io.File;
 import java.time.Instant;
 import java.util.Map;
 
-import static io.intino.master.filesystem.Triple.Tab;
+import static io.intino.master.model.Triple.SEPARATOR;
 import static java.util.stream.Collectors.toMap;
 
-public class FileMaster {
 
+public class FileMaster {
 	private final File folder;
-	private HazelcastInstance hz;
-	private IMap<String, Object> triples;
-	private IMap<Object, String> subjects2Hex;
-	private IMap<String, Object> hex2subjects;
-	private IMap<Object, String> predicates2Hex;
-	private IMap<String, Object> hex2predicates;
+	private IMap<String, String> triples;
+	private IMap<String, String> subjects2Hex;
+	private IMap<String, String> predicates2Hex;
 
 	public FileMaster(File folder) {
 		this.folder = folder;
 	}
 
 	public void start() {
-		hz = Hazelcast.newHazelcastInstance();
-		initMaps();
+		HazelcastInstance hz = Hazelcast.newHazelcastInstance();
+		triples = hz.getMap("master");
+		subjects2Hex = hz.getMap("subjects");
+		predicates2Hex = hz.getMap("predicates");
 		Logger.info(Instant.now() + ": Loading data");
 		triples.putAll(new TriplesFileReader(folder).triples()
 				.map(t -> new Triple(subjectCode(t.subject()), predicateCode(t.predicate()), value(t.value())))
-				.collect(toMap(t -> t.subject() + Tab + t.predicate(), Triple::value)));
-		this.hex2subjects.putAll(subjects2Hex.entrySet().stream().collect(toMap(Map.Entry::getValue, Map.Entry::getKey)));
-		this.hex2predicates.putAll(predicates2Hex.entrySet().stream().collect(toMap(Map.Entry::getValue, Map.Entry::getKey)));
+				.collect(toMap(t -> t.subject() + SEPARATOR + t.predicate(), Triple::value)));
+		hz.<String, String>getMap("hex2subjects")
+				.putAll(subjects2Hex.entrySet().stream().collect(toMap(Map.Entry::getValue, Map.Entry::getKey)));
+		hz.<String, String>getMap("hex2predicates")
+				.putAll(predicates2Hex.entrySet().stream().collect(toMap(Map.Entry::getValue, Map.Entry::getKey)));
 		Logger.info(Instant.now() + ": Data loaded");
 	}
 
-	private void initMaps() {
-		triples = initStringObjectMap("master");
-		subjects2Hex = initObjectStringMap("subjects");
-		predicates2Hex = initObjectStringMap("predicates");
-		hex2subjects = initStringObjectMap("hex2subjects");
-		hex2predicates = initStringObjectMap("hex2predicates");
-	}
-
-	private IMap<String, Object> initStringObjectMap(String name) {
-		IMap<String, Object> map = hz.getMap(name);
-		map.evictAll();
-		return map;
-	}
-
-	private IMap<Object, String> initObjectStringMap(String name) {
-		IMap<Object, String> map = hz.getMap(name);
-		map.evictAll();
-		return map;
-	}
 
 	private String hex(Object integer) {
 		return Integer.toHexString((Integer) integer);
@@ -96,7 +78,6 @@ public class FileMaster {
 	}
 
 	private String value(String value) {
-		if (value.startsWith("$") || value.startsWith("#")) return value;
-		return subjectCode(value) + "";
+		return value.startsWith("$") || value.startsWith("#") ? value : subjectCode(value) + "";
 	}
 }
