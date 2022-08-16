@@ -4,9 +4,8 @@ Artifact("io.intino", "1.0.0") test as Solution
 	Model(language = "Master", version = "1.0.0", sdk = "io.intino.master:builder", sdkVersion = "1.0.0")
 	Imports
 		Test("junit", "junit", "4.13")
-	Package(mode = ModulesAndLibrariesLinkedByManifest)
+	Package(mode = ModulesAndLibrariesLinkedByManifest) as Runnable(mainClass = "io.intino.master.file.Main")
 
-Repository(identifier = "intino-maven")
-	Release("https://artifactory.intino.io/artifactory/releases")
+Repository(identifier = "intino-maven") > Release("https://artifactory.intino.io/artifactory/releases")
 
-RunConfiguration local
+RunConfiguration local > Argument("triples_folder", "/Users/oroncal/workspace/cinepolis/temp/datasets")

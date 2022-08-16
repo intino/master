@@ -83,7 +83,7 @@ def type(master)
     	$entity+remove...[$NL$NL]
 
     	private String typeOf(Triple triple) {
-    		return triple.subject().split(":")$[1];
+    		return triple.subject().split(":")$[1].toLowerCase();
     	}
 
     	public class TripleEntryDispatcher implements EntryAddedListener<String, String>, EntryUpdatedListener<String, String>, EntryRemovedListener<String, String>, EntryEvictedListener<String, String> {
@@ -117,12 +117,12 @@ def type(master)
 end
 
 def trigger(remover)
-	put("$name", RemoteMaster.this::removeFrom$name+FirstUpperCase);
+	put("$name+lowerCase", RemoteMaster.this::removeFrom$name+FirstUpperCase);
 end
 
 
 def trigger(adder)
-	put("$name", RemoteMaster.this::addTo$name+FirstUpperCase);
+	put("$name+lowerCase", RemoteMaster.this::addTo$name+FirstUpperCase);
 end
 
 def trigger(map)

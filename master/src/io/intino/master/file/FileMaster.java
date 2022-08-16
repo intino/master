@@ -33,7 +33,7 @@ public class FileMaster {
 		Logger.info(Instant.now() + ": Loading data");
 		triples.putAll(new TriplesFileReader(folder).triples()
 				.map(t -> new Triple(subjectCode(t.subject()), predicateCode(t.predicate()), value(t.value())))
-				.collect(toMap(t -> t.subject() + SEPARATOR + t.predicate(), Triple::value)));
+				.collect(toMap(t -> t.subject() + SEPARATOR + t.predicate(), Triple::value, (k1, k2) -> k1)));
 		hz.<String, String>getMap("hex2subjects")
 				.putAll(subjects2Hex.entrySet().stream().collect(toMap(Map.Entry::getValue, Map.Entry::getKey)));
 		hz.<String, String>getMap("hex2predicates")
@@ -78,6 +78,6 @@ public class FileMaster {
 	}
 
 	private String value(String value) {
-		return value.startsWith("$") || value.startsWith("#") ? value : subjectCode(value) + "";
+		return value.startsWith("$") || value.startsWith("#") ? subjectCode(value) + "" : value;
 	}
 }
