@@ -46,6 +46,11 @@ def type(master)
     	private final IMap<String, String> reverseSubjectFactors;
     	private final IMap<String, String> reversePredicateFactors;
 
+    	public static MasterClient connect(String url) {
+    		ClientConfig cfg = new ClientConfig();
+    		cfg.getNetworkConfig().addAddress(url);
+    		return new MasterClient(cfg);
+    	}
 
     	public MasterClient() {
     		this(new ClientConfig());
@@ -64,7 +69,7 @@ def type(master)
     		publisher = (publisher, triple) -> hz.getTopic("requests").publish(publisher + ":" + triple.toString());
     	}
 
-    	$entity+getter...[$NL]
+    	$entity+getter...[$NL$NL]
 
     	public void publish(String publisher, Triple triple) {
     		if (this.publisher != null) this.publisher.accept(publisher, triple);

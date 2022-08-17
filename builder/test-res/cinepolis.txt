@@ -1,5 +1,5 @@
 def.file
-/Users/oroncal/workspace/master/test/src/io/intino/test/model/Model.tara#true
+/Users/oroncal/workspace/master/test/src/com/cinepolis/master/model/Model.tara#true
 
 project
 master
@@ -33,7 +33,7 @@ test
 version
 1.0.0
 generation.package
-io.intino.test.model
+com.cinepolis.master.model
 make
 false
 test.module
