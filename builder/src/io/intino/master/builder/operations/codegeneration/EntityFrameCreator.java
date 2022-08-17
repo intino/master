@@ -53,6 +53,9 @@ public class EntityFrameCreator {
 				.add("package", conf.workingPackage())
 				.add("name", node.name())
 				.add("attribute", node.components().stream().map(this::attrFrameOf).toArray());
+		final Parameter parent = parameter(node, "entity");
+		builder.add("parent", parent != null ? ((Node) parent.values().get(0)).name() : "io.intino.master.model.Entity");
+		if (node.is(Tag.Decorable) || node.isAbstract()) builder.add("isAbstract", "abstract");
 		if (node.is(Tag.Decorable)) builder.add("abstract", "abstract");
 		return builder;
 	}

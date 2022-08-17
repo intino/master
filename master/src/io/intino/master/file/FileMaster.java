@@ -39,6 +39,7 @@ public class FileMaster {
 		hz.<String, String>getMap("reversePredicateFactors")
 				.putAll(predicateFactors.entrySet().stream().collect(toMap(Map.Entry::getValue, Map.Entry::getKey)));
 		Logger.info(Instant.now() + ": Data loaded");
+		hz.getTopic("requests").addMessageListener(this::handleMessage);
 	}
 
 

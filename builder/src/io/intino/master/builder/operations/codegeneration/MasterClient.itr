@@ -61,7 +61,7 @@ def type(master)
     			add(new Triple(reverseSubjectFactors.get(subjectVerb$[0]).toString(), reversePredicateFactors.get(subjectVerb$[1]), value));
     		});
     		master.addEntryListener(new TripleEntryDispatcher(), true);
-    		publisher = (publisher, triple) -> hz.getTopic("request").publish(publisher + ":" + triple.toString());
+    		publisher = (publisher, triple) -> hz.getTopic("requests").publish(publisher + ":" + triple.toString());
     	}
 
     	$entity+getter...[$NL]
@@ -116,12 +116,12 @@ def type(master)
     }
 end
 
-def trigger(remover)
+def !type(abstract) trigger(remover)
 	put("$name+lowerCase", MasterClient.this::removeFrom$name+FirstUpperCase);
 end
 
 
-def trigger(adder)
+def !type(abstract) trigger(adder)
 	put("$name+lowerCase", MasterClient.this::addTo$name+FirstUpperCase);
 end
 
@@ -129,14 +129,14 @@ def trigger(map)
 	private final Map<String, $name+FirstUpperCase> $name+FirstLowerCase~Map = new HashMap<>();
 end
 
-def trigger(add)
+def !type(abstract) trigger(add)
 	private void addTo$name+FirstUpperCase(Triple triple) {
     	if (!$name+firstLowerCase~Map.containsKey(triple.subject())) $name+firstLowerCase~Map.put(triple.subject(), new $name+FirstUpperCase(triple.subject(), this));
     	$name+firstLowerCase~Map.get(triple.subject()).add(triple);
     }
 end
 
-def trigger(remove)
+def !type(abstract) trigger(remove)
 	private void removeFrom$name+FirstUpperCase(Triple triple) {
 		$name+firstLowerCase~Map.computeIfPresent(triple.subject(), (k, v) -> v.remove(triple));
 	}

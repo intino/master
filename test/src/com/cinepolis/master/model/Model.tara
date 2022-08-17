@@ -17,7 +17,7 @@ Entity Employee
 	Attribute language as String
 	Attribute enabled as Boolean(true) // Valor por defecto
 
-Entity Place
+Entity Place is abstract
 
 Entity Country as ExtensionOf(Place) is decorable
 	Attribute name as String

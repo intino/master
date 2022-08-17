@@ -20,11 +20,11 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import static io.intino.magritte.builder.compiler.shared.TaraBuildConstants.PRESENTABLE_MESSAGE;
 import static io.intino.magritte.builder.utils.Format.*;
-import static io.intino.magritte.compiler.shared.TaraBuildConstants.PRESENTABLE_MESSAGE;
 import static java.io.File.separator;
 
-public class MasterCodeServerGenerationOperation extends ModelOperation {
+public class MasterNodeCodeGenerationOperation extends ModelOperation {
 	private static final String DOT = ".";
 	private static final String JAVA = ".java";
 	private static final Logger LOG = Logger.getGlobal();
@@ -35,8 +35,7 @@ public class MasterCodeServerGenerationOperation extends ModelOperation {
 	private final Template entityTemplate;
 	private final Template structTemplate;
 
-
-	public MasterCodeServerGenerationOperation(CompilationUnit unit) {
+	public MasterNodeCodeGenerationOperation(CompilationUnit unit) {
 		super(unit);
 		this.conf = unit.configuration();
 		this.srcFolder = conf.sourceDirectories().isEmpty() ? null : conf.sourceDirectories().get(0);
@@ -96,7 +95,12 @@ public class MasterCodeServerGenerationOperation extends ModelOperation {
 
 	private Map<String, Map<String, String>> createMasterClass(Model model) {
 		FrameBuilder builder = new FrameBuilder("master").add("package", conf.workingPackage());
-		builder.add("entity", model.components().stream().filter(c -> c.type().equals("Entity")).map(c -> new FrameBuilder("entity").add("name", c.name()).toFrame()).toArray());
+		builder.add("entity", model.components().stream().filter(c -> c.type().equals("Entity"))
+				.map(c -> {
+					final FrameBuilder b = new FrameBuilder("entity").add("name", c.name());
+					if (c.isAbstract()) b.add("abstract");
+					return b.toFrame();
+				}).toArray());
 		String qn = conf.workingPackage() + DOT + firstUpperCase().format(javaValidName().format("MasterClient").toString());
 		String iQn = conf.workingPackage() + DOT + firstUpperCase().format(javaValidName().format("Master").toString());
 		return Map.of(model.components().get(0).file(),

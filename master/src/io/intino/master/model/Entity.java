@@ -5,18 +5,24 @@ import java.util.Map;
 
 public class Entity {
 	private final String id;
-	public Map<String, String> attributes = new HashMap<>();
+	public Map<String, String> unmappedAttributes = new HashMap<>(3);
 
 	public Entity(String id) {
 		this.id = id;
 	}
 
-	public String id() {
-		return id;
+
+	public Entity add(Triple t) {
+		unmappedAttributes.put(t.predicate(), t.value());
+		return this;
 	}
 
+	public Entity remove(Triple t) {
+		unmappedAttributes.remove(t.predicate());
+		return this;
+	}
 
-	public long parseLong(String value) {
-		return Long.parseLong(value);
+	public String id() {
+		return id;
 	}
 }

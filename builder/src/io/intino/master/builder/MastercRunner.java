@@ -2,9 +2,9 @@ package io.intino.master.builder;
 
 
 import io.intino.magritte.builder.TaraCompilerRunner;
+import io.intino.magritte.builder.compiler.shared.TaraBuildConstants;
 import io.intino.magritte.builder.core.errorcollection.TaraException;
-import io.intino.magritte.compiler.shared.TaraBuildConstants;
-import io.intino.master.builder.operations.MasterCodeServerGenerationOperation;
+import io.intino.master.builder.operations.MasterNodeCodeGenerationOperation;
 
 import java.io.File;
 import java.util.List;
@@ -25,7 +25,7 @@ public class MastercRunner {
 			File argsFile;
 			if (checkArgumentsNumber(args) || (argsFile = checkConfigurationFile(args[0])) == null)
 				throw new TaraException("Error finding args file");
-			new TaraCompilerRunner(verbose, List.of(MasterCodeServerGenerationOperation.class)).run(argsFile);
+			new TaraCompilerRunner(verbose, List.of(MasterNodeCodeGenerationOperation.class)).run(argsFile);
 		} catch (Exception e) {
 			LOG.log(Level.SEVERE, e.getMessage() == null ? e.getStackTrace()[0].toString() : e.getMessage());
 			e.printStackTrace();

@@ -12,6 +12,5 @@ public class Client {
 		cfg.getNetworkConfig().addAddress("localhost:5701");
 		MasterClient master = new MasterClient(cfg);
 		List<Area> areas = master.areas();
-		master.publish();
 	}
 }
