@@ -1,8 +1,6 @@
-package io.intino.test;
-
+import com.cinepolis.master.model.MasterClient;
+import com.cinepolis.master.model.entities.Area;
 import com.hazelcast.client.config.ClientConfig;
-import io.intino.test.model.MasterClient;
-import io.intino.test.model.entities.Area;
 
 import java.util.List;
 
@@ -14,5 +12,6 @@ public class Client {
 		cfg.getNetworkConfig().addAddress("localhost:5701");
 		MasterClient master = new MasterClient(cfg);
 		List<Area> areas = master.areas();
+		master.publish();
 	}
 }

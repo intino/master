@@ -34,7 +34,7 @@ def type(master)
 
 	import static io.intino.master.model.Triple.SEPARATOR;
 
-	public class RemoteMaster implements Master {
+	public class MasterClient implements Master {
     	private static BiConsumer<String, Triple> publisher;
     	private final Map<String, Consumer<Triple>> removers = new HashMap<>() {{
     		$entity+remover...[$NL]
@@ -47,11 +47,11 @@ def type(master)
     	private final IMap<String, String> reversePredicateFactors;
 
 
-    	public RemoteMaster() {
+    	public MasterClient() {
     		this(new ClientConfig());
     	}
 
-    	public RemoteMaster(ClientConfig config) {
+    	public MasterClient(ClientConfig config) {
     		HazelcastInstance hz = HazelcastClient.newHazelcastClient(config);
     		reverseSubjectFactors = hz.getMap("reverseSubjectFactors");
     		reversePredicateFactors = hz.getMap("reversePredicateFactors");
@@ -117,12 +117,12 @@ def type(master)
 end
 
 def trigger(remover)
-	put("$name+lowerCase", RemoteMaster.this::removeFrom$name+FirstUpperCase);
+	put("$name+lowerCase", MasterClient.this::removeFrom$name+FirstUpperCase);
 end
 
 
 def trigger(adder)
-	put("$name+lowerCase", RemoteMaster.this::addTo$name+FirstUpperCase);
+	put("$name+lowerCase", MasterClient.this::addTo$name+FirstUpperCase);
 end
 
 def trigger(map)
