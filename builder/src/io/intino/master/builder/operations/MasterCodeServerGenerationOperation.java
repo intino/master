@@ -3,7 +3,6 @@ package io.intino.master.builder.operations;
 import io.intino.itrules.Frame;
 import io.intino.itrules.FrameBuilder;
 import io.intino.itrules.Template;
-import io.intino.magritte.Language;
 import io.intino.magritte.builder.core.CompilationUnit;
 import io.intino.magritte.builder.core.CompilerConfiguration;
 import io.intino.magritte.builder.core.errorcollection.CompilationFailedException;
@@ -91,18 +90,18 @@ public class MasterCodeServerGenerationOperation extends ModelOperation {
 		Map<String, Map<String, String>> outputs = new HashMap<>();
 		model.components().stream()
 				.filter(node -> node.type().equals("Struct") && ((NodeImpl) node).isDirty() && !((NodeImpl) node).isVirtual())
-				.forEach(node -> renderStructNode(outputs, node, model.language()));
+				.forEach(node -> renderStructNode(outputs, node));
 		return outputs;
 	}
 
 	private Map<String, Map<String, String>> createMasterClass(Model model) {
 		FrameBuilder builder = new FrameBuilder("master").add("package", conf.workingPackage());
 		builder.add("entity", model.components().stream().filter(c -> c.type().equals("Entity")).map(c -> new FrameBuilder("entity").add("name", c.name()).toFrame()).toArray());
-		String qn = conf.workingPackage() + DOT + firstUpperCase().format(javaValidName().format("RemoteMaster").toString());
+		String qn = conf.workingPackage() + DOT + firstUpperCase().format(javaValidName().format("MasterClient").toString());
 		String iQn = conf.workingPackage() + DOT + firstUpperCase().format(javaValidName().format("Master").toString());
 		return Map.of(model.components().get(0).file(),
-				Map.of(destination(qn), customize(new RemoteMasterTemplate()).render(builder.toFrame()),
-						destination(iQn), customize(new RemoteMasterTemplate()).render(builder.add("interface").toFrame()))
+				Map.of(destination(qn), customize(new MasterClientTemplate()).render(builder.toFrame()),
+						destination(iQn), customize(new MasterClientTemplate()).render(builder.add("interface").toFrame()))
 		);
 	}
 
@@ -115,8 +114,8 @@ public class MasterCodeServerGenerationOperation extends ModelOperation {
 		});
 	}
 
-	private void renderStructNode(Map<String, Map<String, String>> map, Node node, Language language) {
-		Map<String, Frame> frames = new StructFrameCreator(conf, language).create(node);
+	private void renderStructNode(Map<String, Map<String, String>> map, Node node) {
+		Map<String, Frame> frames = new StructFrameCreator(conf).create(node);
 		if (!map.containsKey(node.file())) map.put(node.file(), new LinkedHashMap<>());
 		frames.forEach((path, frame) -> {
 			String destination = destination(path);

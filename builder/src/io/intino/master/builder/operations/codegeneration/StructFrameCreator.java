@@ -3,7 +3,6 @@ package io.intino.master.builder.operations.codegeneration;
 
 import io.intino.itrules.Frame;
 import io.intino.itrules.FrameBuilder;
-import io.intino.magritte.Language;
 import io.intino.magritte.builder.core.CompilerConfiguration;
 import io.intino.magritte.lang.model.Aspect;
 import io.intino.magritte.lang.model.Node;
@@ -36,11 +35,9 @@ public class StructFrameCreator {
 			"Long", "List<Long>"
 	);
 	private final CompilerConfiguration conf;
-	private final Language language;
 
-	public StructFrameCreator(CompilerConfiguration conf, Language language) {
+	public StructFrameCreator(CompilerConfiguration conf) {
 		this.conf = conf;
-		this.language = language;
 	}
 
 	public Map<String, Frame> create(Node node) {

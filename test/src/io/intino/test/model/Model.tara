@@ -75,7 +75,7 @@ Entity Screen as ExtensionOf(Place)
 	Attribute seats as Integer
 	Attribute ipOffset as Integer
 	Attribute optimized as Boolean(defaultValue = false)
-	Attribute type as Word("STANDARD" "LED" "LASER" "MACRO_XE", defaultValue = "STANDARD")
+	Attribute type as Word("STANDARD" "LED" "LASER" "MACRO_XE" "IMAX", defaultValue = "STANDARD")
 	Attribute tech3D as Word("IMAX" "IMAXbarco" "IMAXchristie" "REALD")
 	Attribute tech4D as Word("_4DX")
 	Attribute setup as Word("STANDARD" "JUNIOR" "PREMIUM", defaultValue = "STANDARD")
@@ -105,6 +105,8 @@ Entity Asset
 	Attribute type as String
 	Attribute model as String
 	Attribute warranty as String
+	Attribute place as Entity(Place)
+	Attribute status as Word("Delivering" "Delivered" "Installed")
 //	Attribute isGhost as Function -> Bool
 
 Entity DualAsset as ExtensionOf(Asset)

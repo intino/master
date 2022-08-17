@@ -43,8 +43,8 @@ def type(master)
     		$entity+adder...[$NL]
     	}};
     	$entity+map...[$NL]
-    	private final IMap<String, String> hex2subjects;
-    	private final IMap<String, String> hex2predicates;
+    	private final IMap<String, String> reverseSubjectFactors;
+    	private final IMap<String, String> reversePredicateFactors;
 
 
     	public RemoteMaster() {
@@ -53,12 +53,12 @@ def type(master)
 
     	public RemoteMaster(ClientConfig config) {
     		HazelcastInstance hz = HazelcastClient.newHazelcastClient(config);
-    		hex2subjects = hz.getMap("hex2subjects");
-    		hex2predicates = hz.getMap("hex2predicates");
+    		reverseSubjectFactors = hz.getMap("reverseSubjectFactors");
+    		reversePredicateFactors = hz.getMap("reversePredicateFactors");
     		IMap<String, String> master = hz.getMap("master");
     		master.forEach((key, value) -> {
     			final String$[] subjectVerb = key.split(SEPARATOR);
-    			add(new Triple(hex2subjects.get(subjectVerb$[0]).toString(), hex2predicates.get(subjectVerb$[1]), value));
+    			add(new Triple(reverseSubjectFactors.get(subjectVerb$[0]).toString(), reversePredicateFactors.get(subjectVerb$[1]), value));
     		});
     		master.addEntryListener(new TripleEntryDispatcher(), true);
     		publisher = (publisher, triple) -> hz.getTopic("request").publish(publisher + ":" + triple.toString());
@@ -110,7 +110,7 @@ def type(master)
 
     		private Triple triple(EntryEvent<String, String> event) {
     			final String$[] subjectVerb = event.getKey().split(SEPARATOR);
-    			return new Triple(hex2subjects.get(subjectVerb$[0]).toString(), hex2predicates.get(subjectVerb$[1]), event.getValue());
+    			return new Triple(reverseSubjectFactors.get(subjectVerb$[0]).toString(), reversePredicateFactors.get(subjectVerb$[1]), event.getValue());
     		}
     	}
     }

@@ -17,9 +17,9 @@ import static java.util.stream.Collectors.toMap;
 
 public class FileMaster {
 	private final File folder;
-	private IMap<String, String> triples;
-	private IMap<String, String> subjects2Hex;
-	private IMap<String, String> predicates2Hex;
+	private IMap<String, String> values;
+	private IMap<String, String> subjectFactors;
+	private IMap<String, String> predicateFactors;
 
 	public FileMaster(File folder) {
 		this.folder = folder;
@@ -27,17 +27,17 @@ public class FileMaster {
 
 	public void start() {
 		HazelcastInstance hz = Hazelcast.newHazelcastInstance();
-		triples = hz.getMap("master");
-		subjects2Hex = hz.getMap("subjects");
-		predicates2Hex = hz.getMap("predicates");
+		values = hz.getMap("master");
+		subjectFactors = hz.getMap("subjects");
+		predicateFactors = hz.getMap("predicates");
 		Logger.info(Instant.now() + ": Loading data");
-		triples.putAll(new TriplesFileReader(folder).triples()
+		values.putAll(new TriplesFileReader(folder).triples()
 				.map(t -> new Triple(subjectCode(t.subject()), predicateCode(t.predicate()), value(t.value())))
 				.collect(toMap(t -> t.subject() + SEPARATOR + t.predicate(), Triple::value, (k1, k2) -> k1)));
-		hz.<String, String>getMap("hex2subjects")
-				.putAll(subjects2Hex.entrySet().stream().collect(toMap(Map.Entry::getValue, Map.Entry::getKey)));
-		hz.<String, String>getMap("hex2predicates")
-				.putAll(predicates2Hex.entrySet().stream().collect(toMap(Map.Entry::getValue, Map.Entry::getKey)));
+		hz.<String, String>getMap("reverseSubjectFactors")
+				.putAll(subjectFactors.entrySet().stream().collect(toMap(Map.Entry::getValue, Map.Entry::getKey)));
+		hz.<String, String>getMap("reversePredicateFactors")
+				.putAll(predicateFactors.entrySet().stream().collect(toMap(Map.Entry::getValue, Map.Entry::getKey)));
 		Logger.info(Instant.now() + ": Data loaded");
 	}
 
@@ -60,21 +60,21 @@ public class FileMaster {
 		String subjectCode = subjectCode(triple.subject());
 		String predicateCode = predicateCode(triple.predicate());
 		String value = value(triple.value());
-		triples.put(subjectCode + "_" + predicateCode, value);
+		values.put(subjectCode + "_" + predicateCode, value);
 	}
 
 	private String subjectCode(String subject) {
-		if (!subjects2Hex.containsKey(subject)) synchronized (subjects2Hex) {
-			subjects2Hex.put(subject, hex(subjects2Hex.size()));
+		if (!subjectFactors.containsKey(subject)) synchronized (subjectFactors) {
+			subjectFactors.put(subject, hex(subjectFactors.size()));
 		}
-		return subjects2Hex.get(subject);
+		return subjectFactors.get(subject);
 	}
 
 	private String predicateCode(String predicate) {
-		if (!predicates2Hex.containsKey(predicate)) synchronized (predicates2Hex) {
-			predicates2Hex.put(predicate, hex(predicates2Hex.size()));
+		if (!predicateFactors.containsKey(predicate)) synchronized (predicateFactors) {
+			predicateFactors.put(predicate, hex(predicateFactors.size()));
 		}
-		return predicates2Hex.get(predicate);
+		return predicateFactors.get(predicate);
 	}
 
 	private String value(String value) {
