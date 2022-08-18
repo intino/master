@@ -48,11 +48,11 @@ def type(entity & class)
 			return ($name+FirstUpperCase) this;
 		}
 
-		public List<Triple> asTriples() {
+		[public List<Triple> asTriples() {
 			final java.util.ArrayList<Triple> triples = new java.util.ArrayList<>();
 			$attribute+asTriple...[$NL]
 			return triples;
-		}
+		}]
     }
 end
 

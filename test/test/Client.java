@@ -1,16 +1,14 @@
 import com.cinepolis.master.model.MasterClient;
-import com.cinepolis.master.model.entities.Area;
-import com.hazelcast.client.config.ClientConfig;
+import com.cinepolis.master.model.entities.Screen;
+import io.intino.master.model.Triple;
 
 import java.util.List;
 
 public class Client {
 
-
 	public static void main(String[] args) {
-		ClientConfig cfg = new ClientConfig();
-		cfg.getNetworkConfig().addAddress("localhost:5701");
-		MasterClient master = new MasterClient(cfg);
-		List<Area> areas = master.areas();
+		MasterClient client = MasterClient.connect("localhost:5701");
+		List<Screen> screens = client.screens();
+		client.publish("test", new Triple("1020126.14:screen"	,"type",	"LED"));
 	}
 }

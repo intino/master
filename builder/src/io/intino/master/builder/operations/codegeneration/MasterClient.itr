@@ -45,6 +45,7 @@ def type(master)
     	$entity+map...[$NL]
     	private final IMap<String, String> reverseSubjectFactors;
     	private final IMap<String, String> reversePredicateFactors;
+		private HazelcastInstance;
 
     	public static MasterClient connect(String url) {
     		ClientConfig cfg = new ClientConfig();
@@ -57,7 +58,7 @@ def type(master)
     	}
 
     	public MasterClient(ClientConfig config) {
-    		HazelcastInstance hz = HazelcastClient.newHazelcastClient(config);
+    		this.hz = HazelcastClient.newHazelcastClient(config);
     		reverseSubjectFactors = hz.getMap("reverseSubjectFactors");
     		reversePredicateFactors = hz.getMap("reversePredicateFactors");
     		IMap<String, String> master = hz.getMap("master");
@@ -66,10 +67,14 @@ def type(master)
     			add(new Triple(reverseSubjectFactors.get(subjectVerb$[0]).toString(), reversePredicateFactors.get(subjectVerb$[1]), value));
     		});
     		master.addEntryListener(new TripleEntryDispatcher(), true);
-    		publisher = (publisher, triple) -> hz.getTopic("requests").publish(publisher + ":" + triple.toString());
+    		publisher = (publisher, triple) -> hz.getTopic("requests").publish(publisher + "##" + triple.toString());
     	}
 
     	$entity+getter...[$NL$NL]
+
+    	public void stop() {
+    		hz.shutdown();
+    	}
 
     	public void publish(String publisher, Triple triple) {
     		if (this.publisher != null) this.publisher.accept(publisher, triple);

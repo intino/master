@@ -3,7 +3,7 @@ package io.intino.master.model;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Entity {
+public abstract class Entity {
 	private final String id;
 	public Map<String, String> unmappedAttributes = new HashMap<>(3);
 
