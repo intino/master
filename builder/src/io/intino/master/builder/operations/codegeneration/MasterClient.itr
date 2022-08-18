@@ -45,7 +45,7 @@ def type(master)
     	$entity+map...[$NL]
     	private final IMap<String, String> reverseSubjectFactors;
     	private final IMap<String, String> reversePredicateFactors;
-		private HazelcastInstance;
+		private HazelcastInstance hz;
 
     	public static MasterClient connect(String url) {
     		ClientConfig cfg = new ClientConfig();
