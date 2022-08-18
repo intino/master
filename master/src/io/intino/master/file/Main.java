@@ -1,25 +1,32 @@
 package io.intino.master.file;
 
-import org.apache.log4j.Level;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
 
 import static java.util.stream.Collectors.toMap;
 
 public class Main {
 
 	public static void main(String[] args) {
-		io.intino.alexandria.logger4j.Logger.setLevel(Level.ERROR);
-		final java.util.logging.Logger Logger = java.util.logging.Logger.getGlobal();
-		final ConsoleHandler handler = new ConsoleHandler();
-		handler.setLevel(java.util.logging.Level.INFO);
-		handler.setFormatter(new io.intino.alexandria.logger.Formatter());
-		Logger.setUseParentHandlers(false);
-		Logger.addHandler(handler);
+		configureLogger();
 		new FileMaster(new File(asMap(args).get("triples_folder"))).start();
+	}
+
+	private static void configureLogger() {
+		java.util.logging.Logger rootLogger = LogManager.getLogManager().getLogger("");
+		rootLogger.setLevel(Level.WARNING);
+		for (Handler h : rootLogger.getHandlers()) rootLogger.removeHandler(h);
+		final ConsoleHandler handler = new ConsoleHandler();
+		handler.setLevel(Level.WARNING);
+		handler.setFormatter(new io.intino.alexandria.logger.Formatter());
+		rootLogger.setUseParentHandlers(false);
+		rootLogger.addHandler(handler);
 	}
 
 	private static Map<String, String> asMap(String[] args) {

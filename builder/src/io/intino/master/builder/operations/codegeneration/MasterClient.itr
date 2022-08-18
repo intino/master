@@ -58,6 +58,7 @@ def type(master)
     	}
 
     	public MasterClient(ClientConfig config) {
+    		configureLogger();
     		this.hz = HazelcastClient.newHazelcastClient(config);
     		reverseSubjectFactors = hz.getMap("reverseSubjectFactors");
     		reversePredicateFactors = hz.getMap("reversePredicateFactors");
@@ -95,6 +96,17 @@ def type(master)
     	private String typeOf(Triple triple) {
     		return triple.subject().split(":")$[1].toLowerCase();
     	}
+
+    	private static void configureLogger() {
+			java.util.logging.Logger rootLogger = LogManager.getLogManager().getLogger("");
+			rootLogger.setLevel(Level.WARNING);
+			for (Handler h : rootLogger.getHandlers()) rootLogger.removeHandler(h);
+			final ConsoleHandler handler = new ConsoleHandler();
+			handler.setLevel(Level.WARNING);
+			handler.setFormatter(new io.intino.alexandria.logger.Formatter());
+			rootLogger.setUseParentHandlers(false);
+			rootLogger.addHandler(handler);
+		}
 
     	public class TripleEntryDispatcher implements EntryAddedListener<String, String>, EntryUpdatedListener<String, String>, EntryRemovedListener<String, String>, EntryEvictedListener<String, String> {
 
