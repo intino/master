@@ -32,6 +32,11 @@ def type(master)
 	import java.util.function.BiConsumer;
 	import java.util.function.Consumer;
 
+	import java.util.logging.ConsoleHandler;
+    import java.util.logging.Handler;
+    import java.util.logging.Level;
+    import java.util.logging.LogManager;
+
 	import static io.intino.master.model.Triple.SEPARATOR;
 
 	public class MasterClient implements Master {
