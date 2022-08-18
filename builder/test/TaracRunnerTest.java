@@ -1,5 +1,6 @@
 import io.intino.magritte.builder.utils.FileSystemUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -33,6 +34,7 @@ public class TaracRunnerTest {
 	}
 
 	@Test
+	@Ignore
 	public void cinepolisM1() {
 		FileSystemUtils.removeDir("/Users/oroncal/workspace/master/test/gen/com/cinepolis/master/model");
 		main(new String[]{temp(home + "cinepolis.txt")});
