@@ -4,9 +4,9 @@ Artifact("io.intino.master", "1.0.0") builder
 	Imports
 		Compile("io.intino.magritte", "builder-core", "1.0.0")
 		Test("junit", "junit", "4.13")
-	Package(mode = ModulesAndLibrariesLinkedByManifest) as Runnable(mainClass = "io.intino.master.builder.MastercRunner")
+	Package(mode = ModulesAndLibrariesLinkedByManifest) as Runnable("io.intino.master.builder.MastercRunner")
+	Distribution > Artifactory("intino-maven") > Release("https://artifactory.intino.io/artifactory/release-libraries")
 
-Repository(identifier = "intino-maven")
-	Release("https://artifactory.intino.io/artifactory/releases")
+Repository("intino-maven") > Release("https://artifactory.intino.io/artifactory/releases")
 
 RunConfiguration local

@@ -1,7 +1,7 @@
 dsl Legio
 
 Artifact("io.intino", "1.0.0") master as Product
-	Model(language = "Proteo", version = "3.4.0", sdkVersion = "4.2.0", exclude = ExcludeFrameworkCode)
+	Model("Proteo", "3.4.0", sdkVersion = "4.2.0", exclude = ExcludeFrameworkCode)
 	Imports
 		Compile("com.hazelcast", "hazelcast", "5.1.1")
 		Compile("io.intino.magritte", "language", "1.3.2")
@@ -9,5 +9,6 @@ Artifact("io.intino", "1.0.0") master as Product
 		Compile("io.intino.alexandria", "logger4j", "1.0.1")
 		Test("junit", "junit", "4.13")
 	Package(mode = ModulesAndLibrariesLinkedByManifest)
+	Distribution > Artifactory("intino-maven") > Release("https://artifactory.intino.io/artifactory/release-libraries")
 
 Repository("intino-maven") > Release("https://artifactory.intino.io/artifactory/releases")

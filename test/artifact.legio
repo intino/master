@@ -5,6 +5,7 @@ Artifact("com.cinepolis", "1.0.0") master as Solution
 	Imports
 		Test("junit", "junit", "4.13")
 	Package(mode = ModulesAndLibrariesLinkedByManifest) as Runnable(mainClass = "io.intino.master.file.Main")
+	Distribution > Artifactory("intino-maven") > Release("https://artifactory.intino.io/artifactory/release-libraries")
 
 Repository(identifier = "intino-maven") > Release("https://artifactory.intino.io/artifactory/releases")
 
