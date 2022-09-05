@@ -2,8 +2,8 @@ package io.intino.master.builder;
 
 
 import io.intino.magritte.builder.TaraCompilerRunner;
-import io.intino.magritte.builder.compiler.shared.TaraBuildConstants;
 import io.intino.magritte.builder.core.errorcollection.TaraException;
+import io.intino.magritte.compiler.shared.TaraBuildConstants;
 import io.intino.master.builder.operations.MasterNodeCodeGenerationOperation;
 
 import java.io.File;

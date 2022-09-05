@@ -20,8 +20,8 @@ import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static io.intino.magritte.builder.compiler.shared.TaraBuildConstants.PRESENTABLE_MESSAGE;
 import static io.intino.magritte.builder.utils.Format.*;
+import static io.intino.magritte.compiler.shared.TaraBuildConstants.PRESENTABLE_MESSAGE;
 import static java.io.File.separator;
 
 public class MasterNodeCodeGenerationOperation extends ModelOperation {
