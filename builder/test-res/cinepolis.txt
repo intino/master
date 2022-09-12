@@ -1,24 +1,24 @@
 def.file
-/Users/oroncal/workspace/master/test/src/com/cinepolis/master/model/Model.tara#true
+C:/Users/naits/Desktop/IntinoDev/master/master/src/io/intino/master/model/Model.tara#true
 
 project
 master
 module
 test
 semantic.lib
-/Users/oroncal/Library/Application Support/JetBrains/IntelliJIdea2022.1/plugins/intino-plugin/lib/language-1.3.2.jar
+C:/Users/naits/AppData/Local/JetBrains/IdeaIC2022.2/plugins/intino-plugin/lib/language-1.3.2.jar
 outputpath
-/Users/oroncal/workspace/master/test/gen
+C:/Users/naits/Desktop/IntinoDev/master/test/gen
 final_outputpath
-/Users/oroncal/workspace/master/out/production/test/
+C:/Users/naits/Desktop/IntinoDev/master/out/production/test/
 resources
-/Users/oroncal/workspace/master/test/res
+C:/Users/naits/Desktop/IntinoDev/master/test/res
 tara.path
-/Users/oroncal/.m2
+C:/Users/naits/.m2
 intino.project.path
-/Users/oroncal/workspace/master/.intino
+C:/Users/naits/Desktop/IntinoDev/master/.intino
 src.path
-/Users/oroncal/workspace/master/test/src
+C:/Users/naits/Desktop/IntinoDev/master/test/src
 
 level
 Solution
