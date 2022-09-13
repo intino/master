@@ -8,12 +8,11 @@ import com.hazelcast.map.IMap;
 import com.hazelcast.topic.Message;
 import io.intino.alexandria.logger.Logger;
 import io.intino.master.model.Triple;
-import org.xerial.snappy.Snappy;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 import static io.intino.master.model.Triple.SEPARATOR;
@@ -28,6 +27,7 @@ public class Master {
 	protected IMap<String, String> predicateFactors;
 	protected IMap<String, String> reverseSubjectFactors;
 	protected IMap<String, String> reversePredicateFactors;
+	private final Gson gson = new Gson();
 
 	public Master(File folder) {
 		this.folder = folder;
@@ -37,18 +37,6 @@ public class Master {
 		hz = Hazelcast.newHazelcastInstance(new Config());
 
 		loadData();
-//		clear();
-//
-//		loadData2();
-//		clear();
-//
-//		loadData3();
-//		clear();
-
-//		loadData4();
-//		clear();
-
-//		loadData5();
 
 		setupListeners();
 	}
@@ -79,7 +67,7 @@ public class Master {
 		Logger.info("Data loaded in " + time + " ms\n" + memoryUsedStats());
 	}
 
-	private void setupListeners() {
+	protected void setupListeners() {
 		hz.getTopic("requests").addMessageListener(this::handleMessage);
 	}
 
@@ -112,6 +100,35 @@ public class Master {
 	}
 
 	private void handleMessage(Message<Object> message) {
+		String[] info = message.getMessageObject().toString().split("##", -1);
+		Triple triple = new Triple(info[1]);
+		if(add(triple)) save(info[0], triple);
+	}
+
+	private boolean add(Triple triple) {
+		Map<String, String> record = getRecord(triple.subject());
+		if(Objects.equals(record.get(triple.predicate()), triple.value())) return false;
+		record.put(triple.predicate(), triple.value());
+		updateRecord(triple.subject(), record);
+		return true;
+	}
+
+	private void updateRecord(String id, Map<String, String> record) {
+		values.set(id, gson.toJson(record));
+	}
+
+	@SuppressWarnings("unchecked")
+	private Map<String, String> getRecord(String subject) {
+		String recordJson = (String) values.get(subject);
+		if(recordJson == null) return new HashMap<>();
+		return gson.fromJson(recordJson, Map.class);
+	}
+
+	private void save(String publisher, Triple triple) {
+		new TriplesFileWriter(folder, publisher).write(triple);
+	}
+
+	private void handleMessage2(Message<Object> message) {
 		String[] split = message.getMessageObject().toString().split("##", -1);
 		addAndSave(split[0], new Triple(split[1]));
 	}
@@ -120,7 +137,7 @@ public class Master {
 		if (add(triple)) new TriplesFileWriter(folder, sender).write(triple);
 	}
 
-	public boolean add(Triple triple) {
+	public boolean add2(Triple triple) {
 		String key = subjectFactor(triple.subject()) + SEPARATOR + predicateFactor(triple.predicate());
 		String value = value(triple.value());
 		if (!value.equals(values.get(key))) {

@@ -5,6 +5,7 @@ import java.io.Serializable;
 public class Triple implements Serializable {
 
 	public static final String SEPARATOR = "\t";
+
 	private final String subject, predicate, value;
 
 	public Triple(String line) {

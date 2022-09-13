@@ -24,7 +24,7 @@ public class TestMaster extends Master {
 
 	public static void main(String[] args) {
 		// Warmup
-		new Launcher().setMasterImpl(TestMaster::new).launch(new String[] {"triples_folder=temp/cinepolis-data/mock-1K-1"});
+//		new Launcher().setMasterImpl(TestMaster::new).launch(new String[] {"triples_folder=temp/cinepolis-data/mock-1K-1"});
 
 //		new Launcher().setMasterImpl(TestMaster::new).launch(new String[] {"triples_folder=temp/cinepolis-data/mock-1K-1"});
 //		new Launcher().setMasterImpl(TestMaster::new).launch(new String[] {"triples_folder=temp/cinepolis-data/mock-1K-3"});
@@ -65,15 +65,18 @@ public class TestMaster extends Master {
 		List<LoadStats> stats = new ArrayList<>();
 
 		stats.add(loadData());
-		clear();
+//		clear();
+//
+//		stats.add(loadData2());
+//		clear();
+//
+//		stats.add(loadData3());
+//		clear();
+//
+//		stats.add(loadData4());
 
-		stats.add(loadData2());
-		clear();
+		setupListeners();
 
-		stats.add(loadData3());
-		clear();
-
-		stats.add(loadData4());
 //		clear();
 //
 //		stats.add(loadData5());
