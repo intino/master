@@ -3,7 +3,6 @@ package com.cinepolis.master;
 import com.cinepolis.master.model.Master;
 import com.cinepolis.master.model.TripleRecord;
 import com.cinepolis.master.model.entities.*;
-import com.google.gson.Gson;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.core.EntryAdapter;
@@ -12,67 +11,39 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 import io.intino.alexandria.logger.Logger;
 import io.intino.master.model.Triple;
+import io.intino.master.serialization.MasterSerializer;
+import io.intino.master.serialization.MasterSerializers;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 
-public class MasterClientLocalMaps implements Master {
+import static io.intino.master.core.Master.*;
+import static java.util.Objects.requireNonNull;
+
+public class CachedMasterClient implements Master {
 
 	public static void main(String[] args) {
 		connect("localhost:62555");
 	}
 
-	public static MasterClientLocalMaps connect(String url) {
+	public static CachedMasterClient connect(String url) {
 		ClientConfig cfg = new ClientConfig();
 		cfg.getNetworkConfig().addAddress(url);
-		return new MasterClientLocalMaps(cfg);
+		CachedMasterClient client = new CachedMasterClient(cfg);
+		client.start();
+		return client;
 	}
 
-	private static BiConsumer<String, Triple> publisher;
-
-	private final Map<String, Consumer<String>> removers = new HashMap<>() {{
-		put("employee", MasterClientLocalMaps.this::removeFromEmployee);
-		put("country", MasterClientLocalMaps.this::removeFromCountry);
-		put("area", MasterClientLocalMaps.this::removeFromArea);
-		put("region", MasterClientLocalMaps.this::removeFromRegion);
-		put("theater", MasterClientLocalMaps.this::removeFromTheater);
-		put("screen", MasterClientLocalMaps.this::removeFromScreen);
-		put("dock", MasterClientLocalMaps.this::removeFromDock);
-		put("screendock", MasterClientLocalMaps.this::removeFromScreenDock);
-		put("depot", MasterClientLocalMaps.this::removeFromDepot);
-		put("office", MasterClientLocalMaps.this::removeFromOffice);
-		put("desk", MasterClientLocalMaps.this::removeFromDesk);
-		put("asset", MasterClientLocalMaps.this::removeFromAsset);
-		put("dualasset", MasterClientLocalMaps.this::removeFromDualAsset);
-	}};
-
-	private final Map<String, Consumer<TripleRecord>> adders = new HashMap<>() {{
-		put("employee", MasterClientLocalMaps.this::addToEmployee);
-		put("country", MasterClientLocalMaps.this::addToCountry);
-		put("area", MasterClientLocalMaps.this::addToArea);
-		put("region", MasterClientLocalMaps.this::addToRegion);
-		put("theater", MasterClientLocalMaps.this::addToTheater);
-		put("screen", MasterClientLocalMaps.this::addToScreen);
-		put("dock", MasterClientLocalMaps.this::addToDock);
-		put("screendock", MasterClientLocalMaps.this::addToScreenDock);
-		put("depot", MasterClientLocalMaps.this::addToDepot);
-		put("office", MasterClientLocalMaps.this::addToOffice);
-		put("desk", MasterClientLocalMaps.this::addToDesk);
-		put("asset", MasterClientLocalMaps.this::addToAsset);
-		put("dualasset", MasterClientLocalMaps.this::addToDualAsset);
-	}};
-
 	private final Map<String, Employee> employeeMap = new ConcurrentHashMap<>();
-	private final Map<String, Place> placeMap = new ConcurrentHashMap<>();
 	private final Map<String, Country> countryMap = new ConcurrentHashMap<>();
 	private final Map<String, Area> areaMap = new ConcurrentHashMap<>();
 	private final Map<String, Region> regionMap = new ConcurrentHashMap<>();
@@ -85,54 +56,116 @@ public class MasterClientLocalMaps implements Master {
 	private final Map<String, Desk> deskMap = new ConcurrentHashMap<>();
 	private final Map<String, Asset> assetMap = new ConcurrentHashMap<>();
 	private final Map<String, DualAsset> dualAssetMap = new ConcurrentHashMap<>();
-	private final HazelcastInstance hz;
 
-	public MasterClientLocalMaps() {
+	private final ClientConfig config;
+	private HazelcastInstance hazelcast;
+
+	public CachedMasterClient() {
 		this(new ClientConfig());
 	}
 
-	public MasterClientLocalMaps(ClientConfig config) {
+	public CachedMasterClient(ClientConfig config) {
+		this.config = requireNonNull(config);
+	}
+
+	public void start() {
 		configureLogger();
-		this.hz = HazelcastClient.newHazelcastClient(config);
+		initHazelcastClient();
+		loadData();
+		initListeners();
+	}
 
-		IMap<String, String> master = hz.getMap("master");
+	private void initListeners() {
+		hazelcast.getMap(MASTER_MAP_NAME).addEntryListener(new TripleEntryDispatcher(), true);
+	}
 
-		Gson gson = new Gson();
+	private void loadData() {
+		IMap<String, String> master = hazelcast.getMap(MASTER_MAP_NAME);
+		MasterSerializer serializer = serializer();
 
-		Logger.info("Loading data from master...");
+		Logger.info("Loading data from master (serializer=" + serializer.name() + ")");
+		long start = System.currentTimeMillis();
 
-		master.forEach((id, recordJson) -> {
-			Map<String, String> attributes = gson.fromJson(recordJson, Map.class);
-			add(new TripleRecord(id, attributes));
-		});
+		loadDataMultiThread(master, serializer);
 
-		Logger.info("Data from master loaded: " + this);
+		long time = System.currentTimeMillis() - start;
+		Logger.info("Data from master loaded in " + time + " ms => " + this);
+	}
 
-		master.addEntryListener(new TripleEntryDispatcher(), true);
+	private void loadDataSingleThread(IMap<String, String> master, MasterSerializer serializer) {
+		master.forEach((id, serializedRecord) -> add(new TripleRecord(id, serializer.deserialize(serializedRecord))));
+	}
 
-		publisher = (publisher, triple) -> hz.getTopic("requests").publish(publisher + "##" + triple.toString());
+	private void loadDataMultiThread(IMap<String, String> master, MasterSerializer serializer) {
+		try {
+			ExecutorService threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1);
 
-		publish("test", new Triple("2520001:theater", "name", "Cine 1"));
+			master.forEach((id, serializedRecord) -> threadPool.submit(() -> add(new TripleRecord(id, serializer.deserialize(serializedRecord)))));
+
+			threadPool.shutdown();
+			threadPool.awaitTermination(1, TimeUnit.HOURS);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private void initHazelcastClient() {
+		hazelcast = HazelcastClient.newHazelcastClient(config);
+	}
+
+	public void stop() {
+		hazelcast.shutdown();
+	}
+
+	public void publish(String publisherName, Triple triple) {
+		if(publisherName == null) throw new NullPointerException("Publisher name cannot be null");
+		if(triple == null) throw new NullPointerException("Triple cannot be null");
+		hazelcast.getTopic(REQUESTS_TOPIC).publish(publisherName + MESSAGE_SEPARATOR + triple);
+	}
+
+	private MasterSerializer serializer() {
+		IMap<String, String> metadata = hazelcast.getMap(METADATA_MAP_NAME);
+		return MasterSerializers.get(metadata.get("serializer"));
 	}
 
 	private void add(TripleRecord record) {
-		if(!adders.containsKey(record.type())) {
-//			Logger.error("No adder defined for type " + record.type());
-			return;
+		switch(record.type()) {
+			case "employee": addToEmployee(record); break;
+			case "country": addToCountry(record); break;
+			case "area": addToArea(record); break;
+			case "region": addToRegion(record); break;
+			case "theater": addToTheater(record); break;
+			case "screen": addToScreen(record); break;
+			case "dock": addToDock(record); break;
+			case "screendock": addToScreenDock(record); break;
+			case "depot": addToDepot(record); break;
+			case "office": addToOffice(record); break;
+			case "desk": addToDesk(record); break;
+			case "asset": addToAsset(record); break;
+			case "dualasset": addToDualAsset(record); break;
 		}
-		adders.get(record.type()).accept(record);
 	}
 
 	private void remove(String id) {
-		if(!removers.containsKey(typeOf(id))) {
-//			Logger.error("No remover defined for type " + typeOf(id));
-			return;
+		switch(typeOf(id)) {
+			case "employee": removeFromEmployee(id); break;
+			case "country": removeFromCountry(id); break;
+			case "area": removeFromArea(id); break;
+			case "region": removeFromRegion(id); break;
+			case "theater": removeFromTheater(id); break;
+			case "screen": removeFromScreen(id); break;
+			case "dock": removeFromDock(id); break;
+			case "screendock": removeFromScreenDock(id); break;
+			case "depot": removeFromDepot(id); break;
+			case "office": removeFromOffice(id); break;
+			case "desk": removeFromDesk(id); break;
+			case "asset": removeFromAsset(id); break;
+			case "dualasset": removeFromDualAsset(id); break;
 		}
-		removers.get(typeOf(id)).accept(id);
 	}
 
 	private String typeOf(String id) {
-		return id.contains(":") ? id.substring(id.indexOf(':') + 1) : "unknown";
+		return id.contains(":") ? id.substring(id.indexOf(':') + 1) : NONE_TYPE;
 	}
 
 	public Employee employee(String id) {
@@ -144,11 +177,13 @@ public class MasterClientLocalMaps implements Master {
 	}
 
 	public Place place(String id) {
-		return placeMap.get(id);
+		// TODO: this will get removed
+		return null;
 	}
 
 	public List<Place> places() {
-		return new ArrayList<>(placeMap.values());
+		// TODO: this will get removed
+		return null;
 	}
 
 	public Country country(String id) {
@@ -245,14 +280,6 @@ public class MasterClientLocalMaps implements Master {
 
 	public List<DualAsset> dualAssets() {
 		return new ArrayList<>(dualAssetMap.values());
-	}
-
-	public void stop() {
-		hz.shutdown();
-	}
-
-	public void publish(String publisherName, Triple triple) {
-		if (publisher != null) publisher.accept(publisherName, triple);
 	}
 
 	private void addToEmployee(TripleRecord record) {
@@ -405,7 +432,6 @@ public class MasterClientLocalMaps implements Master {
 	public String toString() {
 		return "MasterClientLocalMaps{" +
 				"employeeMap=" + employeeMap.size() +
-				", placeMap=" + placeMap.size() +
 				", countryMap=" + countryMap.size() +
 				", areaMap=" + areaMap.size() +
 				", regionMap=" + regionMap.size() +
@@ -425,14 +451,12 @@ public class MasterClientLocalMaps implements Master {
 
 		@Override
 		public void entryAdded(EntryEvent<String, String> event) {
-			updateRecord(event.getKey(), event.getValue());
-//			add(triple(event));
+			addOrUpdateRecord(event.getKey(), event.getValue());
 		}
 
 		@Override
 		public void entryUpdated(EntryEvent<String, String> event) {
-			updateRecord(event.getKey(), event.getValue());
-//			add(triple(event));
+			addOrUpdateRecord(event.getKey(), event.getValue());
 		}
 
 		@Override
@@ -445,9 +469,9 @@ public class MasterClientLocalMaps implements Master {
 			remove(event.getKey());
 		}
 
-		private void updateRecord(String id, String recordJson) {
-			Map<String, String> attributes = new Gson().fromJson(recordJson, Map.class);
-			add(new TripleRecord(id, attributes));
+		private void addOrUpdateRecord(String id, String serializedRecord) {
+			MasterSerializer serializer = serializer();
+			add(new TripleRecord(id, serializer.deserialize(serializedRecord)));
 		}
 	}
 }

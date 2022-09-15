@@ -1,6 +1,5 @@
-package io.intino.master.file;
+package io.intino.master.core;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Function;
@@ -13,13 +12,13 @@ import static java.util.stream.Collectors.toMap;
 
 public class Launcher {
 
-	private Function<File, Master> masterImpl = Master::new;
+	private Function<MasterConfig, Master> masterImpl = Master::new;
 	private Runnable loggerConfigurator = this::configureLogger;
 
 	public void launch(String[] args) {
 		Map<String, String> arguments = asMap(args);
 		configureLogger();
-		Master master = masterImpl.apply(new File(arguments.get("triples_folder")));
+		Master master = masterImpl.apply(new MasterConfig(arguments));
 		master.start();
 	}
 
@@ -40,7 +39,7 @@ public class Launcher {
 				.collect(toMap(s -> s[0].trim(), s -> s[1].trim()));
 	}
 
-	public Launcher setMasterImpl(Function<File, Master> masterImpl) {
+	public Launcher setMasterImpl(Function<MasterConfig, Master> masterImpl) {
 		this.masterImpl = masterImpl == null ? Master::new : masterImpl;
 		return this;
 	}

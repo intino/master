@@ -1,4 +1,4 @@
-package io.intino.master.file;
+package io.intino.master.core;
 
 
 public class Main {

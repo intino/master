@@ -1,11 +1,14 @@
-package io.intino.master.file;
+package io.intino.master.io;
 
+import io.intino.alexandria.logger.Logger;
 import io.intino.master.model.Triple;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,21 +28,21 @@ public class TriplesFileReader {
 		try {
 			return Files.readAllLines(path).stream();
 		} catch (IOException e) {
-			e.printStackTrace();
+			Logger.error(e);
 			return Stream.empty();
 		}
 	}
 
-	public Stream<Triple> triples() {
+	public List<Triple> triples() {
 		try (Stream<Path> stream = Files.walk(folder.toPath())) {
 			return stream.filter(f -> f.toFile().getName().endsWith(".triples"))
 					.flatMap(this::linesOf)
 					.filter(l -> !l.trim().isEmpty())
 					.map(this::tripleOf)
-					.collect(Collectors.toList()).stream();
+					.collect(Collectors.toList());
 		} catch (IOException e) {
-			e.printStackTrace();
-			return Stream.empty();
+			Logger.error(e);
+			return Collections.emptyList();
 		}
 	}
 }

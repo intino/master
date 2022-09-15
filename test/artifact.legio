@@ -6,7 +6,7 @@ Artifact("com.cinepolis", "1.0.0") master as Solution
 		Compile("org.xerial.snappy", "snappy-java", "1.1.8.4")
     	Compile("com.google.code.gson", "gson", "2.9.0")
 		Test("junit", "junit", "4.13")
-	Package(mode = ModulesAndLibrariesLinkedByManifest) as Runnable(mainClass = "io.intino.master.file.Main")
+	Package(mode = ModulesAndLibrariesLinkedByManifest) as Runnable(mainClass = "com.cinepolis.master.Main")
 	Distribution > Artifactory("intino-maven") > Release("https://artifactory.intino.io/artifactory/release-libraries")
 
 Repository(identifier = "intino-maven") > Release("https://artifactory.intino.io/artifactory/releases")

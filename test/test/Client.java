@@ -1,6 +1,5 @@
-import com.cinepolis.master.MasterClientRemoteMaps;
-import com.cinepolis.master.MasterClientTriplesFactorsLocalMaps;
-import com.cinepolis.master.model.*;
+import com.cinepolis.master.CachedMasterClient;
+import com.cinepolis.master.model.Master;
 import com.hazelcast.client.config.ClientConfig;
 import com.hazelcast.client.config.ClientNetworkConfig;
 import io.intino.master.model.Entity;
@@ -10,7 +9,7 @@ import java.util.function.Supplier;
 
 public class Client {
 
-	private static final int ITERATIONS = 5;
+	private static final int ITERATIONS = 8;
 	private static long blackhole = new Random().nextLong();
 
 	public static void main(String[] args) {
@@ -18,9 +17,10 @@ public class Client {
 //		List<Screen> screens = client.screens();
 //		client.publish("test", new Triple("1020126.14:screen", "type", "LED"));
 
-		test("Triples + factors + local cache", () -> new MasterClientTriplesFactorsLocalMaps(config()));
-//		test("Records (json) + local cache", () -> new MasterClientLocalMaps(config()));
-//		test("Records (json)", () -> new MasterClientRemoteMaps(config()));
+//		test("Triples + factors + local cache", () -> new MasterClientTriplesFactorsLocalMaps(config()));
+		test("Records (json) + local cache", () -> new CachedMasterClient(config()));
+//		test("Records (json)", () -> new LazyMasterClient(config()));
+//		test("Records (json)", () -> new MasterClientScatteredRemoteMaps(config()));
 
 		System.out.println(blackhole);
 	}
@@ -37,6 +37,7 @@ public class Client {
 			long start = System.currentTimeMillis();
 
 			Master master = masterImpl.get();
+			master.start();
 			blackhole += master.hashCode();
 
 			loadTime += System.currentTimeMillis() - start;
@@ -53,6 +54,8 @@ public class Client {
 			}
 
 			queryTime += System.currentTimeMillis() - start;
+
+			master.stop();
 		}
 
 		float timeResult = loadTime / (float) ITERATIONS;

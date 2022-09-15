@@ -1,4 +1,4 @@
-import io.intino.master.file.Main;
+import io.intino.master.core.Main;
 
 public class Server {
 
