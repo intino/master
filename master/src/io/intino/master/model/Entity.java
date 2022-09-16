@@ -5,31 +5,41 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import static java.util.Objects.requireNonNull;
+
 public abstract class Entity {
 
-	private final String id;
-	private final Map<String, String> unmappedAttributes = new HashMap<>(3);
+	private final Id id;
+	private final Map<String, String> extraAttributes = new HashMap<>(3);
 
 	public Entity(String id) {
-		this.id = id;
+		this.id = new Id(id);
 	}
 
-	public String id() {
+	public Id id() {
 		return id;
 	}
 
 	public Entity add(Triple t) {
-		unmappedAttributes.put(t.predicate(), t.value());
+		extraAttributes.put(t.predicate(), t.value());
 		return this;
 	}
 
 	public Entity remove(Triple t) {
-		unmappedAttributes.remove(t.predicate());
+		extraAttributes.remove(t.predicate());
 		return this;
 	}
 
-	public Map<String, String> unmappedAttributes() {
-		return Collections.unmodifiableMap(unmappedAttributes);
+	public Map<String, String> extraAttributes() {
+		return Collections.unmodifiableMap(extraAttributes);
+	}
+
+	public String extraAttribute(String name) {
+		return extraAttributes.get(name);
+	}
+
+	public boolean hasExtraAttribute(String name) {
+		return extraAttributes.containsKey(name);
 	}
 
 	@Override
@@ -47,6 +57,46 @@ public abstract class Entity {
 
 	@Override
 	public String toString() {
-		return id;
+		return id.toString();
+	}
+
+	public static final class Id {
+
+		private final String id;
+
+		public Id(String id) {
+			this.id = requireNonNull(id);
+		}
+
+		public String get() {
+			return id;
+		}
+
+		public String value() {
+			final int index = id.indexOf(':');
+			return index < 0 ? id : id.substring(0, index);
+		}
+
+		public String type() {
+			return Triple.typeOf(id);
+		}
+
+		@Override
+		public String toString() {
+			return get();
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (o == null || getClass() != o.getClass()) return false;
+			Id id1 = (Id) o;
+			return Objects.equals(id, id1.id);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(id);
+		}
 	}
 }

@@ -25,9 +25,11 @@ import static io.intino.magritte.compiler.shared.TaraBuildConstants.PRESENTABLE_
 import static java.io.File.separator;
 
 public class MasterNodeCodeGenerationOperation extends ModelOperation {
+
 	private static final String DOT = ".";
 	private static final String JAVA = ".java";
 	private static final Logger LOG = Logger.getGlobal();
+
 	private final CompilerConfiguration conf;
 	private final Map<String, List<String>> outMap = new LinkedHashMap<>();
 	private final File srcFolder;
@@ -94,19 +96,54 @@ public class MasterNodeCodeGenerationOperation extends ModelOperation {
 	}
 
 	private Map<String, Map<String, String>> createMasterClass(Model model) {
+		String cQn = conf.workingPackage() + DOT + firstUpperCase().format(javaValidName().format("CachedMasterClient").toString());
+		String lQn = conf.workingPackage() + DOT + firstUpperCase().format(javaValidName().format("LazyMasterClient").toString());
+		String iQn = conf.workingPackage() + DOT + firstUpperCase().format(javaValidName().format("MasterClient").toString());
+
+		return Map.of(model.components().get(0).file(),
+				Map.of(
+						destination(cQn), customize(new MasterClientTemplate()).render(masterFrameBuilder(model, "cached").toFrame()),
+						destination(lQn), customize(new MasterClientTemplate()).render(masterFrameBuilder(model, "lazy").toFrame()),
+						destination(iQn), customize(new MasterClientTemplate()).render(masterFrameBuilder(model, "interface").toFrame())
+				)
+		);
+	}
+
+	private FrameBuilder masterFrameBuilder(Model model, String type) {
 		FrameBuilder builder = new FrameBuilder("master").add("package", conf.workingPackage());
-		builder.add("entity", model.components().stream().filter(c -> c.type().equals("Entity"))
+		builder.add("entity", entities(model, type));
+		builder.add(type);
+		return builder;
+	}
+
+	private static Object[] entities(Model model, String type) {
+		return model.components().stream().filter(c -> c.type().equals("Entity"))
 				.map(c -> {
 					final FrameBuilder b = new FrameBuilder("entity").add("name", c.name());
-					if (c.isAbstract()) b.add("abstract");
+					if (c.isAbstract()) {
+						b.add("abstract");
+						Frame[] subclasses = subclassesOf(model, c);
+						if(subclasses.length > 0) b.add("subclass", subclasses);
+					}
+					b.add(type);
 					return b.toFrame();
-				}).toArray());
-		String qn = conf.workingPackage() + DOT + firstUpperCase().format(javaValidName().format("MasterClient").toString());
-		String iQn = conf.workingPackage() + DOT + firstUpperCase().format(javaValidName().format("Master").toString());
-		return Map.of(model.components().get(0).file(),
-				Map.of(destination(qn), customize(new MasterClientTemplate()).render(builder.toFrame()),
-						destination(iQn), customize(new MasterClientTemplate()).render(builder.add("interface").toFrame()))
-		);
+				}).toArray();
+	}
+
+	private static Frame[] subclassesOf(Model model, Node parent) {
+		return model.components().stream()
+				.filter(c -> c.type().equals("Entity"))
+				.filter(c -> isSubclassOf(c, parent))
+				.map(c -> new FrameBuilder("subclass").add("name", c.name()).toFrame())
+				.toArray(Frame[]::new);
+	}
+
+	private static boolean isSubclassOf(Node node, Node parent) {
+		if(node instanceof NodeImpl) {
+			String text = ((NodeImpl) node).text();
+			return text != null && text.contains("ExtensionOf(" + parent.name() + ")");
+		}
+		return Objects.equals(node.parentName(), parent.name());
 	}
 
 	private void renderEntityNode(Map<String, Map<String, String>> map, Node node) {

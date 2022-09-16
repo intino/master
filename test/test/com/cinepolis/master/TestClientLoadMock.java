@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TestClientLoad {
+public class TestClientLoadMock {
 
 	private static final int Iterations = 5;
 

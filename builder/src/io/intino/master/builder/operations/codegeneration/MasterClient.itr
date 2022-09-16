@@ -1,106 +1,235 @@
 def type(master & interface)
 	package $package;
 
+	import java.util.Arrays;
 	import java.util.List;
-	import $package.entities.*;
+	import java.util.UUID;
+	import java.util.stream.Stream;
+	import java.util.stream.Collectors;
+	import com.cinepolis.master.model.entities.*;
+	import io.intino.master.model.Triple;
+	import com.hazelcast.core.EntryListener;
 
-	public interface Master {
+	public interface MasterClient {
+
+		static MasterClient create() {
+			return create(new MasterClient.Config());
+		}
+
+		static MasterClient create(MasterClient.Config config) {
+			if(config.type() == Type.Cached) return new CachedMasterClient(config);
+			if(config.type() == Type.Lazy) return new LazyMasterClient(config);
+			throw new IllegalArgumentException("Unknown MasterClient type " + config.type());
+		}
+
+		void start();
+		void stop();
+
+		void publish(String senderName, Triple triple);
+
+		MasterClient.Config config();
+
+		void addEntryListener(EntryListener<String, String> listener);
+
 		$entity+getterSignature...[$NL$NL]
+
+		enum Type {
+    		Cached, Lazy;
+    		public static Type getDefault() {return Cached;}
+    		public static Type byName(String name) {return Arrays.stream(values()).filter(e -> e.name().equalsIgnoreCase(name)).findFirst().orElse(null);}
+    	}
+
+    	final class Config {
+    		private String instanceName = "com.cinepolis.master.Client-" + UUID.randomUUID();
+    		private List<String> addresses = List.of("localhost:5701");
+    		private Type type = Type.getDefault();
+    		private boolean readOnly = true;
+
+    		public Config() {}
+
+    		public Config(Config other) {
+    			this.instanceName = other.instanceName;
+    			this.addresses = other.addresses == null ? null : List.copyOf(other.addresses);
+    			this.type = other.type;
+    			this.readOnly = other.readOnly;
+    		}
+
+    		public String instanceName() {
+    			return instanceName;
+    		}
+
+    		public Config instanceName(String instanceName) {
+    			this.instanceName = instanceName;
+    			return this;
+    		}
+
+    		public List<String> addresses() {
+    			return addresses;
+    		}
+
+    		public Config addresses(List<String> addresses) {
+    			this.addresses = addresses;
+    			return this;
+    		}
+
+    		public Type type() {
+    			return type;
+    		}
+
+    		public Config type(Type type) {
+    			this.type = type;
+    			return this;
+    		}
+
+    		public boolean readOnly() {
+    			return readOnly;
+    		}
+
+    		public Config readOnly(boolean readOnly) {
+    			this.readOnly = readOnly;
+    			return this;
+    		}
+    	}
 	}
 end
 
-def type(master)
+def type(master & cached)
 	package $package;
 
+	import static io.intino.master.core.Master.*;
+	import static java.util.Objects.requireNonNull;
+
 	import com.hazelcast.client.HazelcastClient;
-    import com.hazelcast.client.config.ClientConfig;
-    import com.hazelcast.core.EntryEvent;
-    import com.hazelcast.core.HazelcastInstance;
-    import com.hazelcast.map.IMap;
-    import com.hazelcast.map.listener.EntryAddedListener;
-    import com.hazelcast.map.listener.EntryEvictedListener;
-    import com.hazelcast.map.listener.EntryRemovedListener;
-    import com.hazelcast.map.listener.EntryUpdatedListener;
-    import io.intino.master.model.Triple;
+	import com.hazelcast.client.config.ClientConfig;
+	import com.hazelcast.client.config.ClientNetworkConfig;
+	import com.hazelcast.core.EntryAdapter;
+	import com.hazelcast.core.EntryEvent;
+	import com.hazelcast.core.EntryListener;
+	import com.hazelcast.core.HazelcastInstance;
+	import com.hazelcast.map.IMap;
+	import io.intino.alexandria.logger.Logger;
+	import io.intino.master.model.Triple;
+	import static io.intino.master.model.Triple.SEPARATOR;
+	import io.intino.master.model.TripleRecord;
+	import io.intino.master.model.Triple;
 
-	import $package.entities.*;
+	import com.cinepolis.master.model.entities.*;
+	import io.intino.master.serialization.MasterSerializer;
+	import io.intino.master.serialization.MasterSerializers;
 
-	import java.util.ArrayList;
+	import java.util.concurrent.ConcurrentHashMap;
 	import java.util.HashMap;
 	import java.util.List;
 	import java.util.Map;
-	import java.util.function.BiConsumer;
-	import java.util.function.Consumer;
+	import java.util.stream.Stream;
 
+	import java.util.concurrent.ExecutorService;
+	import java.util.concurrent.Executors;
+	import java.util.concurrent.TimeUnit;
 	import java.util.logging.ConsoleHandler;
-    import java.util.logging.Handler;
-    import java.util.logging.Level;
-    import java.util.logging.LogManager;
+	import java.util.logging.Handler;
+	import java.util.logging.Level;
+	import java.util.logging.LogManager;
 
-	import static io.intino.master.model.Triple.SEPARATOR;
+	public class CachedMasterClient implements MasterClient {
 
-	public class MasterClient implements Master {
-    	private static BiConsumer<String, Triple> publisher;
-    	private final Map<String, Consumer<Triple>> removers = new HashMap<>() {{
-    		$entity+remover...[$NL]
-    	}};
-    	private final Map<String, Consumer<Triple>> adders = new HashMap<>() {{
-    		$entity+adder...[$NL]
-    	}};
     	$entity+map...[$NL]
-    	private final IMap<String, String> reverseSubjectFactors;
-    	private final IMap<String, String> reversePredicateFactors;
-		private HazelcastInstance hz;
 
-    	public static MasterClient connect(String url) {
-    		ClientConfig cfg = new ClientConfig();
-    		cfg.getNetworkConfig().addAddress(url);
-    		return new MasterClient(cfg);
+    	private final MasterClient.Config config;
+		private HazelcastInstance hazelcast;
+
+    	public CachedMasterClient(MasterClient.Config config) {
+    		this.config = requireNonNull(config);
     	}
 
-    	public MasterClient() {
-    		this(new ClientConfig());
+		@Override
+		public void start() {
+			configureLogger();
+			initHazelcastClient();
+			loadData();
+			initListeners();
+		}
+
+		@Override
+    	public void stop() {
+    		hazelcast.shutdown();
     	}
 
-    	public MasterClient(ClientConfig config) {
-    		configureLogger();
-    		this.hz = HazelcastClient.newHazelcastClient(config);
-    		reverseSubjectFactors = hz.getMap("reverseSubjectFactors");
-    		reversePredicateFactors = hz.getMap("reversePredicateFactors");
-    		IMap<String, String> master = hz.getMap("master");
-    		master.forEach((key, value) -> {
-    			final String$[] subjectVerb = key.split(SEPARATOR);
-    			add(new Triple(reverseSubjectFactors.get(subjectVerb$[0]).toString(), reversePredicateFactors.get(subjectVerb$[1]), value));
-    		});
-    		master.addEntryListener(new TripleEntryDispatcher(), true);
-    		publisher = (publisher, triple) -> hz.getTopic("requests").publish(publisher + "##" + triple.toString());
+		@Override
+    	public void addEntryListener(EntryListener<String, String> listener) {
+    		hazelcast.<String, String>getMap(MASTER_MAP_NAME).addEntryListener(listener, true);
+    	}
+
+    	@Override
+    	public MasterClient.Config config() {
+    		return new MasterClient.Config(config);
     	}
 
     	$entity+getter...[$NL$NL]
 
-    	public void stop() {
-    		hz.shutdown();
+    	public void publish(String publisherName, Triple triple) {
+    		if(config.readOnly()) throw new UnsupportedOperationException("This master client cannot publish because it is configured as read only");
+			if(publisherName == null) throw new NullPointerException("Publisher name cannot be null");
+			if(triple == null) throw new NullPointerException("Triple cannot be null");
+			hazelcast.getTopic(REQUESTS_TOPIC).publish(publisherName + MESSAGE_SEPARATOR + triple);
     	}
 
-    	public void publish(String publisher, Triple triple) {
-    		if (this.publisher != null) this.publisher.accept(publisher, triple);
+    	private void add(TripleRecord record) {
+    		switch(record.type()) {
+    			$entity+adder...[$NL]
+    		}
     	}
 
-    	private void add(Triple triple) {
-    		adders.getOrDefault(typeOf(triple), t -> {}).accept(triple);
-    	}
-
-    	private void remove(Triple triple) {
-    		removers.getOrDefault(typeOf(triple), t -> {}).accept(triple);
+    	private void remove(String id) {
+    		switch(Triple.typeOf(id)) {
+    			$entity+remover...[$NL]
+    		}
     	}
 
     	$entity+add...[$NL$NL]
 
     	$entity+remove...[$NL$NL]
 
-    	private String typeOf(Triple triple) {
-    		return triple.subject().split(":")$[1].toLowerCase();
+    	private void initHazelcastClient() {
+			ClientConfig config = new ClientConfig();
+			config.setInstanceName(this.config.instanceName());
+			config.setNetworkConfig(new ClientNetworkConfig().setAddresses(this.config.addresses()));
+			hazelcast = HazelcastClient.newHazelcastClient(config);
     	}
+
+		private void initListeners() {
+			hazelcast.getMap(MASTER_MAP_NAME).addEntryListener(new TripleEntryDispatcher(), true);
+		}
+
+		private void loadData() {
+			IMap<String, String> master = hazelcast.getMap(MASTER_MAP_NAME);
+			MasterSerializer serializer = serializer();
+
+			Logger.info("Loading data from master (serializer=" + serializer.name() + ")");
+			long start = System.currentTimeMillis();
+
+			loadDataMultiThread(master, serializer);
+
+			long time = System.currentTimeMillis() - start;
+			Logger.info("Data from master loaded in " + time + " ms => " + this);
+		}
+
+		private void loadDataSingleThread(IMap<String, String> master, MasterSerializer serializer) {
+			master.forEach((id, serializedRecord) -> add(new TripleRecord(id, serializer.deserialize(serializedRecord))));
+		}
+
+		private void loadDataMultiThread(IMap<String, String> master, MasterSerializer serializer) {
+			try {
+				ExecutorService threadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1);
+
+				master.forEach((id, serializedRecord) -> threadPool.submit(() -> add(new TripleRecord(id, serializer.deserialize(serializedRecord)))));
+
+				threadPool.shutdown();
+				threadPool.awaitTermination(1, TimeUnit.HOURS);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
 
     	private static void configureLogger() {
 			java.util.logging.Logger rootLogger = LogManager.getLogManager().getLogger("");
@@ -113,75 +242,236 @@ def type(master)
 			rootLogger.addHandler(handler);
 		}
 
-    	public class TripleEntryDispatcher implements EntryAddedListener<String, String>, EntryUpdatedListener<String, String>, EntryRemovedListener<String, String>, EntryEvictedListener<String, String> {
+		private MasterSerializer serializer() {
+        	IMap<String, String> metadata = hazelcast.getMap(METADATA_MAP_NAME);
+        	return MasterSerializers.get(metadata.get("serializer"));
+        }
 
-    		@Override
-    		public void entryAdded(EntryEvent<String, String> event) {
-    			add(triple(event));
-    		}
+    	public class TripleEntryDispatcher extends EntryAdapter<String, String> {
 
-    		@Override
-    		public void entryUpdated(EntryEvent<String, String> event) {
-    			add(triple(event));
-    		}
+			@Override
+			public void entryAdded(EntryEvent<String, String> event) {
+				addOrUpdateRecord(event.getKey(), event.getValue());
+			}
 
-    		@Override
-    		public void entryRemoved(EntryEvent<String, String> event) {
-    			remove(triple(event));
-    		}
+			@Override
+			public void entryUpdated(EntryEvent<String, String> event) {
+				addOrUpdateRecord(event.getKey(), event.getValue());
+			}
 
-    		@Override
-    		public void entryEvicted(EntryEvent<String, String> event) {
-    			remove(triple(event));
-    		}
+			@Override
+			public void entryRemoved(EntryEvent<String, String> event) {
+				remove(event.getKey());
+			}
 
-    		private Triple triple(EntryEvent<String, String> event) {
-    			final String$[] subjectVerb = event.getKey().split(SEPARATOR);
-    			return new Triple(reverseSubjectFactors.get(subjectVerb$[0]).toString(), reversePredicateFactors.get(subjectVerb$[1]), event.getValue());
-    		}
+			@Override
+			public void entryEvicted(EntryEvent<String, String> event) {
+				remove(event.getKey());
+			}
+
+			private void addOrUpdateRecord(String id, String serializedRecord) {
+				MasterSerializer serializer = serializer();
+				add(new TripleRecord(id, serializer.deserialize(serializedRecord)));
+			}
     	}
     }
 end
 
-def !type(abstract) trigger(remover)
-	put("$name+lowerCase", MasterClient.this::removeFrom$name+FirstUpperCase);
+
+def type(master & lazy)
+	package $package;
+
+	import static io.intino.master.core.Master.*;
+	import static java.util.Objects.requireNonNull;
+
+	import com.hazelcast.client.HazelcastClient;
+	import com.hazelcast.client.config.ClientConfig;
+	import com.hazelcast.client.config.ClientNetworkConfig;
+	import com.hazelcast.core.EntryAdapter;
+	import com.hazelcast.core.EntryEvent;
+	import com.hazelcast.core.EntryListener;
+	import com.hazelcast.core.HazelcastInstance;
+	import com.hazelcast.map.IMap;
+	import io.intino.alexandria.logger.Logger;
+	import io.intino.master.model.Triple;
+	import static io.intino.master.model.Triple.SEPARATOR;
+	import io.intino.master.model.TripleRecord;
+	import io.intino.master.model.Triple;
+
+	import io.intino.master.model.Entity;
+	import com.cinepolis.master.model.entities.*;
+	import io.intino.master.serialization.MasterSerializer;
+	import io.intino.master.serialization.MasterSerializers;
+
+	import java.util.List;
+	import java.util.Map;
+	import java.util.stream.Stream;
+	import java.util.function.BiFunction;
+
+	import java.util.logging.ConsoleHandler;
+	import java.util.logging.Handler;
+	import java.util.logging.Level;
+	import java.util.logging.LogManager;
+
+	public class LazyMasterClient implements MasterClient {
+
+    	private final MasterClient.Config config;
+		private HazelcastInstance hazelcast;
+		private IMap<String, String> masterMap;
+		private MasterSerializer serializer;
+
+    	public LazyMasterClient(MasterClient.Config config) {
+    		this.config = requireNonNull(config);
+    	}
+
+		@Override
+		public void start() {
+			configureLogger();
+			initHazelcastClient();
+		}
+
+		@Override
+    	public void stop() {
+    		hazelcast.shutdown();
+    	}
+
+		@Override
+    	public void addEntryListener(EntryListener<String, String> listener) {
+    		hazelcast.<String, String>getMap(MASTER_MAP_NAME).addEntryListener(listener, true);
+    	}
+
+    	@Override
+    	public MasterClient.Config config() {
+    		return new MasterClient.Config(config);
+    	}
+
+    	$entity+getter...[$NL$NL]
+
+    	private Map<String, String> getRecord(String id) {
+        	String serializedRecord = masterMap.get(id);
+        	if(serializedRecord == null) return null;
+        	return serializer.deserialize(serializedRecord);
+        }
+
+       	private <T extends Entity> T entity(BiFunction<String, MasterClient, T> constructor, String id, Map<String, String> record) {
+       		T entity = constructor.apply(id, this);
+       		record.entrySet().stream().map(e -> new Triple(id, e.getKey(), e.getValue())).forEach(entity::add);
+       		return entity;
+       	}
+
+    	public void publish(String publisherName, Triple triple) {
+    		if(config.readOnly()) throw new UnsupportedOperationException("This master client cannot publish because it is configured as read only");
+			if(publisherName == null) throw new NullPointerException("Publisher name cannot be null");
+			if(triple == null) throw new NullPointerException("Triple cannot be null");
+			hazelcast.getTopic(REQUESTS_TOPIC).publish(publisherName + MESSAGE_SEPARATOR + triple);
+    	}
+
+    	private void initHazelcastClient() {
+    		ClientConfig config = new ClientConfig();
+        	config.setInstanceName(this.config.instanceName());
+        	config.setNetworkConfig(new ClientNetworkConfig().setAddresses(this.config.addresses()));
+
+        	hazelcast = HazelcastClient.newHazelcastClient(config);
+
+        	masterMap = hazelcast.getMap(MASTER_MAP_NAME);
+        	IMap<String, String> metadata = hazelcast.getMap(METADATA_MAP_NAME);
+        	serializer = MasterSerializers.get(metadata.get("serializer"));
+    	}
+
+    	private static void configureLogger() {
+			java.util.logging.Logger rootLogger = LogManager.getLogManager().getLogger("");
+			rootLogger.setLevel(Level.WARNING);
+			for (Handler h : rootLogger.getHandlers()) rootLogger.removeHandler(h);
+			final ConsoleHandler handler = new ConsoleHandler();
+			handler.setLevel(Level.WARNING);
+			handler.setFormatter(new io.intino.alexandria.logger.Formatter());
+			rootLogger.setUseParentHandlers(false);
+			rootLogger.addHandler(handler);
+		}
+    }
 end
 
+
+def !type(abstract) trigger(remover)
+	case "$name+lowerCase": removeFrom$name+FirstUpperCase(id); break;
+end
 
 def !type(abstract) trigger(adder)
-	put("$name+lowerCase", MasterClient.this::addTo$name+FirstUpperCase);
+	case "$name+lowerCase": addTo$name+FirstUpperCase(record); break;
 end
 
-def trigger(map)
-	private final Map<String, $name+FirstUpperCase> $name+FirstLowerCase~Map = new HashMap<>();
+def !type(abstract) trigger(map)
+	private final Map<String, $name+FirstUpperCase> $name+FirstLowerCase~Map = new ConcurrentHashMap<>();
 end
 
 def !type(abstract) trigger(add)
-	private void addTo$name+FirstUpperCase(Triple triple) {
-    	if (!$name+firstLowerCase~Map.containsKey(triple.subject())) $name+firstLowerCase~Map.put(triple.subject(), new $name+FirstUpperCase(triple.subject(), this));
-    	$name+firstLowerCase~Map.get(triple.subject()).add(triple);
+	private void addTo$name+FirstUpperCase(TripleRecord record) {
+		$name+FirstUpperCase entity = new $name+FirstUpperCase(record.id(), this);
+    	record.triples().forEach(entity::add);
+    	$name+firstLowerCase~Map.put(record.id(), entity);
     }
 end
 
 def !type(abstract) trigger(remove)
-	private void removeFrom$name+FirstUpperCase(Triple triple) {
-		$name+firstLowerCase~Map.computeIfPresent(triple.subject(), (k, v) -> v.remove(triple));
+	private void removeFrom$name+FirstUpperCase(String id) {
+		$name+firstLowerCase~Map.remove(id);
 	}
 end
 
-def trigger(getter)
+def type(subclass) trigger(getById)
+	case "$name+lowerCase": return $name+firstLowerCase(id);
+end
+
+def type(subclass) trigger(getAllStream)
+	$name+Plural+firstLowerCase()
+end
+
+def type(abstract) trigger(getter)
+	@Override
+	public $name+FirstUpperCase $name+firstLowerCase(String id) {
+    	switch(Triple.typeOf(id)) {
+    		$subclass+getById...[$NL]
+    	}
+    	return null;
+	}
+
+	@Override
+	public Stream<$name+FirstUpperCase> $name+Plural+firstLowerCase() {
+		return Stream.of(
+			$subclass+getAllStream...[,$NL]
+		).flatMap(java.util.function.Function.identity());
+	}
+end
+
+def !type(abstract) type(cached) trigger(getter)
+	@Override
 	public $name+FirstUpperCase $name+firstLowerCase(String id) {
 		return $name+firstLowerCase~Map.get(id);
 	}
 
-	public List<$name+FirstUpperCase> $name+Plural+firstLowerCase() {
-		return new ArrayList<>($name+firstLowerCase~Map.values());
+	@Override
+	public Stream<$name+FirstUpperCase> $name+Plural+firstLowerCase() {
+		return $name+firstLowerCase~Map.values().stream();
 	}
 end
 
+def !type(abstract) type(lazy) trigger(getter)
+	@Override
+	public $name+FirstUpperCase $name+firstLowerCase(String id) {
+		Map<String, String> record = getRecord(id);
+    	return record != null ? entity($name+FirstUpperCase::new, id, record) : null;
+	}
+
+	@Override
+	public Stream<$name+FirstUpperCase> $name+Plural+firstLowerCase() {
+		return masterMap.entrySet().stream()
+				.filter(e -> e.getKey().endsWith(":$name+firstLowerCase"))
+				.map(e -> entity($name+FirstUpperCase::new, e.getKey(), serializer.deserialize(e.getValue())));
+	}
+end
 
 def trigger(getterSignature)
 	public $name+FirstUpperCase $name+firstLowerCase(String id);
-
-	public List<$name+FirstUpperCase> $name+Plural+firstLowerCase();
+	public Stream<$name+FirstUpperCase> $name+Plural+firstLowerCase();
+	default List<$name+FirstUpperCase> $name+firstLowerCase~List() {return $name+Plural+firstLowerCase().collect(Collectors.toList());}
 end

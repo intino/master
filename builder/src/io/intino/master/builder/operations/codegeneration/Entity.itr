@@ -2,7 +2,8 @@ def type(entity & decorable)
 	package $package.entities;
 
 	public class $name+FirstUpperCase extends Abstract$name+FirstUpperCase {
-		public $name+FirstUpperCase(String id, $package.Master master) {
+
+		public $name+FirstUpperCase(String id, $package.MasterClient master) {
 			super(id, master);
 		}
 	}
@@ -19,15 +20,13 @@ def type(entity & class)
     import java.util.function.BiConsumer;
 
 	public[ $isAbstract+firstLowerCase] class $abstract~$name+FirstUpperCase extends $parent {
-		private static final Map<String, BiConsumer<$name+FirstUpperCase, Triple>> setters = new HashMap<>() {{
-			[$attribute+set...[$NL]]
-		}};
-		private $package.Master master;
+
+		private $package.MasterClient master;
 
 		[$attribute+wordDeclaration...[$NL]]
 		[$attribute+field...[$NL]]
 
-		public $abstract~$name+FirstUpperCase(String id, $package.Master master) {
+		public $abstract~$name+FirstUpperCase(String id, $package.MasterClient master) {
 			$parent+super
 			this.master = master;
 		}
@@ -35,22 +34,29 @@ def type(entity & class)
 		[$attribute+getter...[$NL$NL]]
 
 		public $name+FirstUpperCase add(Triple triple) {
-			final BiConsumer<$name+FirstUpperCase, Triple> consumer = setters.get(triple.predicate());
-			if (consumer != null) consumer.accept(($name+FirstUpperCase) this, triple);
-			else super.add(triple);
+			switch(triple.predicate()) {
+				[$attribute+set...[$NL]]
+				default:
+				 super.add(triple);
+				 break;
+			}
 			return ($name+FirstUpperCase) this;
 		}
 
 		public $name+FirstUpperCase remove(Triple triple) {
-			final BiConsumer<$name+FirstUpperCase, Triple> consumer = setters.get(triple.predicate());
-			if (consumer != null) consumer.accept(($name+FirstUpperCase) this, new Triple(triple.subject(), triple.predicate(), null));
-			else super.remove(triple);
+			switch(triple.predicate()) {
+				[$attribute+set...[$NL]]
+				default:
+				super.remove(triple);
+				break;
+			}
 			return ($name+FirstUpperCase) this;
 		}
 
 		[public List<Triple> asTriples() {
 			final java.util.ArrayList<Triple> triples = new java.util.ArrayList<>();
 			$attribute+asTriple...[$NL]
+			super.extraAttributes().entrySet().stream().map(e -> new Triple(id().get(), e.getKey(), e.getValue())).forEach(triples::add);
 			return triples;
 		}]
     }
@@ -65,54 +71,70 @@ def trigger(super)
 end
 
 def type(boolean) trigger(set)
-	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t.value() == null ? null : Boolean.parseBoolean(t.value()));
+	case "$name":
+	 	this.$name+firstLowerCase = triple.value() == null ? null : Boolean.parseBoolean(triple.value());
+	 	break;
 end
 
 def type(integer) trigger(set)
-	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t.value() == null ? null : Integer.parseInt(t.value()));
+	case "$name":
+		this.$name+firstLowerCase = triple.value() == null ? null : Integer.parseInt(triple.value());
+		break;
 end
 
 def type(real) trigger(set)
-	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t.value() == null ? null : Double.parseDouble(t.value()));
+	case "$name":
+		this.$name+firstLowerCase = triple.value() == null ? null : Double.parseDouble(triple.value());
+		break;
 end
 
 def type(long) trigger(set)
-	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t.value() == null ? null : Long.parseLong(t.value()));
+	case "$name":
+		this.$name+firstLowerCase = triple.value() == null ? null : Long.parseLong(triple.value());
+		break;
 end
 
 def type(word) trigger(set)
-	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t.value() == null ? null : $type+firstUpperCase.valueOf(t.value()));
+	case "$name":
+		this.$name+firstLowerCase = triple.value() == null ? null : $type+firstUpperCase.valueOf(triple.value());
+		break;
 end
 
 def type(string) trigger(set)
-	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase = t.value());
+	case "$name":
+		this.$name+firstLowerCase = triple.value();
+		break;
 end
 
 def type(entity) trigger(set)
-	put("$name", ($owner+firstLowerCase, t) -> $owner+firstLowerCase.$name+firstLowerCase~Reference = t.value());
+	case "$name":
+		this.$name+firstLowerCase~Reference = triple.value();
+		break;
 end
 
 def type(struct) trigger(set)
-	put("$name", ($owner+firstLowerCase, t) -> {
-		if (t.value() == null) $owner+firstLowerCase.$name+firstLowerCase = null;
-		else {
-			List<String> values = java.util.Arrays.stream(t.value().split(",", -1)).map(v -> v.trim()).collect(java.util.stream.Collectors.toList());
-			$owner+firstLowerCase.$name+firstLowerCase = t.value() == null ? null : $struct+call;
+	case "$name": {
+		if (triple.value() == null) {
+			this.$name+firstLowerCase = null;
+		} else {
+			List<String> values = java.util.Arrays.stream(triple.value().split(",", -1)).map(v -> v.trim()).collect(java.util.stream.Collectors.toList());
+			this.$name+firstLowerCase = triple.value() == null ? null : $struct+call;
 		}
-	});
+		break;
+	}
 end
 
 
 def type(word) trigger(asTriple)
-	triples.add(new Triple(id() + ":$owner+lowercase", "$name+firstLowerCase", $name+firstLowerCase.name()));
+	triples.add(new Triple(id().get(), "$name+firstLowerCase", $name+firstLowerCase.name()));
 end
 
 def type(entity) trigger(asTriple)
-	triples.add(new Triple(id() + ":$owner+lowercase", "$name+firstLowerCase", String.valueOf($name+firstLowerCase~Reference)));
+	triples.add(new Triple(id().get(), "$name+firstLowerCase", String.valueOf($name+firstLowerCase~Reference)));
 end
 
 def trigger(asTriple)
-	triples.add(new Triple(id() + ":$owner+lowercase", "$name+firstLowerCase", String.valueOf($name+firstLowerCase)));
+	triples.add(new Triple(id().get(), "$name+firstLowerCase", String.valueOf($name+firstLowerCase)));
 end
 
 def type(word) trigger(wordDeclaration)

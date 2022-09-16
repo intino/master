@@ -35,7 +35,7 @@ public class TaracRunnerTest {
 
 	@Test
 	public void cinepolisM1() {
-		FileSystemUtils.removeDir("/Users/oroncal/workspace/master/test/gen/com/cinepolis/master/model");
+		FileSystemUtils.removeDir("C:\\Users\\naits\\Desktop\\IntinoDev\\master\\test\\gen\\com\\cinepolis\\master\\model");
 		main(new String[]{temp(home + "cinepolis.txt")});
 	}
 }

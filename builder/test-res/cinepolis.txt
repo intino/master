@@ -1,5 +1,5 @@
 def.file
-C:/Users/naits/Desktop/IntinoDev/master/master/src/io/intino/master/model/Model.tara#true
+C:\Users\naits\Desktop\IntinoDev\master\test\src\com\cinepolis\master\model\Model.tara#true
 
 project
 master
@@ -10,7 +10,7 @@ C:/Users/naits/AppData/Local/JetBrains/IdeaIC2022.2/plugins/intino-plugin/lib/la
 outputpath
 C:/Users/naits/Desktop/IntinoDev/master/test/gen
 final_outputpath
-C:/Users/naits/Desktop/IntinoDev/master/out/production/test/
+C:/Users/naits/Desktop/IntinoDev/master/out/production/test
 resources
 C:/Users/naits/Desktop/IntinoDev/master/test/res
 tara.path

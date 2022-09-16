@@ -1,6 +1,6 @@
 dsl Legio
 
-Artifact("io.intino.master", "1.0.0") builder
+Artifact("io.intino.master", "1.0.1-SNAPSHOT") builder
 	Imports
 		Compile("io.intino.magritte", "builder-core", "1.0.0")
 		Test("junit", "junit", "4.13")

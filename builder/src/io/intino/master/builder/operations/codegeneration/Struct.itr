@@ -1,7 +1,10 @@
 def type(struct)
 	package $package.structs;
 
+	import java.util.Objects;
+
 	public class $name+FirstUpperCase {
+
 		$attribute+field...[$NL]
 
 		public $name+FirstUpperCase($attribute+parameter...[, ]) {
@@ -9,6 +12,27 @@ def type(struct)
 		}
 
 		$attribute+getter...[$NL$NL]
+
+		@Override
+		public boolean equals(Object obj) {
+			if(obj == null) return false;
+			if(!obj.getClass().equals(getClass())) return false;
+			$name+FirstUpperCase other = ($name+FirstUpperCase) obj;
+			return $attribute+equals...[ && ];
+		}
+
+		@Override
+        public int hashCode() {
+        	return Objects.hash($attribute...[, ]);
+        }
+
+		@Override
+		public String toString() {
+			StringBuilder sb = new StringBuilder("$name+FirstUpperCase {");
+			$attribute+toString...[$NL]
+			sb.delete(sb.length() - ", ".length(), sb.length());
+			return sb.append("}").toString();
+		}
 	}
 end
 
@@ -28,4 +52,16 @@ end
 
 def trigger(parameter)
 	$type $name+firstLowerCase
+end
+
+def trigger(equals)
+	Objects.equals(this.$name+firstLowerCase, other.$name+firstLowerCase)
+end
+
+def trigger(toString)
+	sb.append("$name+firstLowerCase=").append(this.$name+firstLowerCase).append(", ");
+end
+
+def type(attribute)
+	this.$name+firstLowerCase
 end

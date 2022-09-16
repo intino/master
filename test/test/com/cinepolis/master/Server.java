@@ -1,3 +1,5 @@
+package com.cinepolis.master;
+
 import io.intino.master.core.Main;
 
 public class Server {
