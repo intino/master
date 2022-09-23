@@ -35,6 +35,7 @@ public class MasterNodeCodeGenerationOperation extends ModelOperation {
 	private final File srcFolder;
 	private final File genFolder;
 	private final Template entityTemplate;
+	private final Template validatorTemplate;
 	private final Template structTemplate;
 
 	public MasterNodeCodeGenerationOperation(CompilationUnit unit) {
@@ -43,6 +44,7 @@ public class MasterNodeCodeGenerationOperation extends ModelOperation {
 		this.srcFolder = conf.sourceDirectories().isEmpty() ? null : conf.sourceDirectories().get(0);
 		this.genFolder = conf.getOutDirectory();
 		this.entityTemplate = customize(new EntityTemplate());
+		this.validatorTemplate = customize(new ValidatorTemplate());
 		this.structTemplate = customize(new StructTemplate());
 	}
 
@@ -83,8 +85,13 @@ public class MasterNodeCodeGenerationOperation extends ModelOperation {
 		Map<String, Map<String, String>> outputs = new HashMap<>();
 		model.components().stream()
 				.filter(node -> node.type().equals("Entity") && ((NodeImpl) node).isDirty() && !((NodeImpl) node).isVirtual())
-				.forEach(node -> renderEntityNode(outputs, node));
+				.forEach(node -> renderEntityAndValidator(outputs, node));
 		return outputs;
+	}
+
+	private void renderEntityAndValidator(Map<String, Map<String, String>> outputs, Node node) {
+		renderEntityNode(outputs, node);
+		renderValidatorNode(outputs, node);
 	}
 
 	private Map<String, Map<String, String>> createStructClasses(Model model) {
@@ -155,6 +162,15 @@ public class MasterNodeCodeGenerationOperation extends ModelOperation {
 		});
 	}
 
+	private void renderValidatorNode(Map<String, Map<String, String>> map, Node node) {
+		Map<String, Frame> frames = new ValidatorFrameCreator(conf).create(node);
+		if (!map.containsKey(node.file())) map.put(node.file(), new LinkedHashMap<>());
+		frames.forEach((path, frame) -> {
+			String destination = validatorDestination(path, frame);
+			map.get(node.file()).put(destination, !isModified(node) && new File(destination).exists() ? "" : validatorTemplate.render(frame));
+		});
+	}
+
 	private void renderStructNode(Map<String, Map<String, String>> map, Node node) {
 		Map<String, Frame> frames = new StructFrameCreator(conf).create(node);
 		if (!map.containsKey(node.file())) map.put(node.file(), new LinkedHashMap<>());
@@ -198,7 +214,10 @@ public class MasterNodeCodeGenerationOperation extends ModelOperation {
 
 	private String entityDestination(String path, Frame frame) {
 		return new File(frame.is("decorable") && !frame.is("abstract") ? srcFolder : genFolder, path.replace(DOT, separator) + JAVA).getAbsolutePath();
+	}
 
+	private String validatorDestination(String path, Frame frame) {
+		return new File(frame.is("decorable") && !frame.is("abstract") ? srcFolder : genFolder, path.replace(DOT, separator) + JAVA).getAbsolutePath();
 	}
 
 	private void fillOutMap(Map<String, Map<String, String>> map) {

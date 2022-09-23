@@ -1,5 +1,6 @@
 package io.intino.master.core;
 
+import io.intino.master.data.validation.ValidationLayers;
 import io.intino.master.serialization.MasterSerializer;
 import io.intino.master.serialization.MasterSerializers;
 
@@ -8,18 +9,20 @@ import java.util.Map;
 
 public class MasterConfig {
 
-	private final File dataDirectory;
+	private File dataDirectory;
+	private File logDirectory;
 	private String instanceName = "master";
 	private int port = 5701;
 	private String host = "localhost";
 	private MasterSerializer serializer = MasterSerializers.getDefault();
+	private ValidationLayers validationLayers = ValidationLayers.createDefault();
 
-	public MasterConfig(File dataDirectory) {
-		this.dataDirectory = dataDirectory;
+	public MasterConfig() {
 	}
 
 	public MasterConfig(Map<String, String> arguments) {
 		this.dataDirectory = new File(arguments.get("data_directory"));
+		this.logDirectory = new File(arguments.get("log_directory"));
 		this.instanceName = arguments.getOrDefault("instance_name", instanceName);
 		this.port = Integer.parseInt(arguments.getOrDefault("port", String.valueOf(port)));
 		this.serializer = MasterSerializers.get(arguments.getOrDefault("serializer", MasterSerializers.Standard.getDefault()));
@@ -28,6 +31,20 @@ public class MasterConfig {
 
 	public File dataDirectory() {
 		return dataDirectory;
+	}
+
+	public MasterConfig dataDirectory(File dataDirectory) {
+		this.dataDirectory = dataDirectory;
+		return this;
+	}
+
+	public File logDirectory() {
+		return logDirectory;
+	}
+
+	public MasterConfig logDirectory(File logDirectory) {
+		this.logDirectory = logDirectory;
+		return this;
 	}
 
 	public String instanceName() {
@@ -63,6 +80,15 @@ public class MasterConfig {
 
 	public MasterConfig serializer(MasterSerializer serializer) {
 		this.serializer = serializer;
+		return this;
+	}
+
+	public ValidationLayers validationLayers() {
+		return validationLayers;
+	}
+
+	public MasterConfig validationLayers(ValidationLayers validationLayers) {
+		this.validationLayers = validationLayers;
 		return this;
 	}
 }

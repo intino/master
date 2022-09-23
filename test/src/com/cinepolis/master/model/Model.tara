@@ -16,6 +16,12 @@ Entity Employee
 	Attribute email as String
 	Attribute language as String
 	Attribute enabled as Boolean(true) // Valor por defecto
+	Attribute date as Date
+	Attribute datetime as DateTime("dd/MM/yyyy HH:mm:ss")
+	Attribute ins as Instant
+	Attribute map as Map
+		Key key as String
+		Value value as Integer
 
 Entity Place is abstract
 
@@ -66,9 +72,9 @@ Entity Theater as ExtensionOf(Place)
     Attribute telephone as String
     Attribute territory as String
     Attribute type as String
-//    Attribute screenList as Function -> Entity(Screen) List
     Attribute area as Entity(Area)
     Attribute enabled as Boolean(defaultValue= true)
+//    Attribute screenList as Function -> Entity(Screen) List
 
 Entity Screen as ExtensionOf(Place)
 	Attribute theater as Entity(Theater)

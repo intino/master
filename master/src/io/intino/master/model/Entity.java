@@ -1,5 +1,6 @@
 package io.intino.master.model;
 
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,6 +59,16 @@ public abstract class Entity {
 	@Override
 	public String toString() {
 		return id.toString();
+	}
+
+	private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+	public DateTimeFormatter dateFormatter() {
+		return DATE_FORMATTER;
+	}
+
+	private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+	public DateTimeFormatter dateTimeFormatter() {
+		return DATETIME_FORMATTER;
 	}
 
 	public static final class Id {

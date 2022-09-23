@@ -34,7 +34,7 @@ public class Triple implements Serializable {
 		this.value = value;
 	}
 
-	private String type() {
+	public String type() {
 		return typeOf(subject);
 	}
 

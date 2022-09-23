@@ -9,6 +9,7 @@ Concept:Named Struct
 	Aspect ExtensionOf > var Struct struct
 
 Concept Data is abstract
+	Aspect Optional
 	Aspect List
 	Aspect Type
 		var string type is reactive private
@@ -26,6 +27,8 @@ Concept Data is abstract
 			var string format = "dd/MM/yyyy"
 		sub DateTime
 			var string format = "dd/MM/yyyy HH:mm:ss"
+		sub Instant
+			var instant defaultValue = empty
 		sub Word
 			var string[] values
 			var string defaultValue= empty

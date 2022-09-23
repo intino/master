@@ -112,6 +112,32 @@ def type(entity) trigger(set)
 		break;
 end
 
+def type(date) trigger(set)
+	case "$name":
+		this.$name+firstLowerCase = java.time.LocalDate.parse(triple.value(), java.time.format.DateTimeFormatter.ofPattern("$format"));
+		break;
+end
+
+def type(datetime) trigger(set)
+	case "$name":
+		this.$name+firstLowerCase = java.time.LocalDateTime.parse(triple.value(), java.time.format.DateTimeFormatter.ofPattern("$format"));
+		break;
+end
+
+def type(instant) trigger(set)
+	case "$name":
+		this.$name+firstLowerCase = java.time.Instant.ofEpochMilli(Long.parseLong(triple.value()));
+		break;
+end
+
+def type(map) trigger(set)
+	case "$name":
+		this.$name+firstLowerCase = triple.value() == null ? null : java.util.Arrays.stream(triple.value().split(";"))
+			.map(e -> e.split("="))
+			.collect(java.util.stream.Collectors.toMap(e -> e[0].trim(), e -> e[1].trim()));
+		break;
+end
+
 def type(struct) trigger(set)
 	case "$name": {
 		if (triple.value() == null) {
@@ -133,6 +159,14 @@ def type(entity) trigger(asTriple)
 	triples.add(new Triple(id().get(), "$name+firstLowerCase", String.valueOf($name+firstLowerCase~Reference)));
 end
 
+def type(date | datetime) trigger(asTriple)
+	triples.add(new Triple(id().get(), "$name+firstLowerCase", $name+firstLowerCase~.format(java.time.format.DateTimeFormatter.ofPattern("$format"))));
+end
+
+def type(instant) trigger(asTriple)
+	triples.add(new Triple(id().get(), "$name+firstLowerCase", String.valueOf($name+firstLowerCase~.toEpochMilli())));
+end
+
 def trigger(asTriple)
 	triples.add(new Triple(id().get(), "$name+firstLowerCase", String.valueOf($name+firstLowerCase)));
 end
@@ -147,6 +181,18 @@ end
 
 def type(entity) trigger(field)
 	protected String $name+firstLowerCase~Reference;
+end
+
+def type(date) trigger(field)
+	protected java.time.LocalDate $name+firstLowerCase;
+end
+
+def type(datetime) trigger(field)
+	protected java.time.LocalDateTime $name+firstLowerCase;
+end
+
+def type(instant) trigger(field)
+	protected java.time.Instant $name+firstLowerCase;
 end
 
 def !type(entity) trigger(field)
@@ -174,12 +220,29 @@ def type(entity) trigger(getter)
 	}
 end
 
+def type(date) trigger(getter)
+	public java.time.LocalDate $name+firstLowerCase() {
+		return this.$name+firstLowerCase;
+	}
+end
+
+def type(datetime) trigger(getter)
+	public java.time.LocalDateTime $name+firstLowerCase() {
+		return this.$name+firstLowerCase;
+	}
+end
+
+def type(instant) trigger(getter)
+	public java.time.Instant $name+firstLowerCase() {
+		return this.$name+firstLowerCase;
+	}
+end
+
 def trigger(getter)
 	public $type $name+firstLowerCase() {
 		return $name+firstLowerCase;
 	}
 end
-
 
 def trigger(abstract)
 	Abstract
@@ -203,6 +266,18 @@ end
 
 def type(double) trigger(parse)
 	Double.parseDouble(values.get($index))
+end
+
+def type(date) trigger(parse)
+	java.time.LocalDate.parse(values.get($index));
+end
+
+def type(datetime) trigger(parse)
+	java.time.LocalDateTime.parse(values.get($index));
+end
+
+def type(instant) trigger(parse)
+	java.time.Instant.parse(values.get($index));
 end
 
 def trigger(parse)
