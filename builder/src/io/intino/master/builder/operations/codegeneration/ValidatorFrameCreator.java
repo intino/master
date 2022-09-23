@@ -63,7 +63,7 @@ public class ValidatorFrameCreator {
 				.add("package", conf.workingPackage())
 				.add("name", node.name())
 				.add("attribute", node.components().stream().map(this::attrFrameOf).toArray())
-				.add("type", node.components().stream().map(this::typeFrameOf).filter(Objects::nonNull).toArray());
+				.add("type", node.components().stream().map(c -> typeFrameOf(c, node)).filter(Objects::nonNull).toArray());
 		final Parameter parent = parameter(node, "entity");
 		builder.add("parent", parent != null ? ((Node) parent.values().get(0)).name() : "io.intino.master.model.Entity");
 		if (node.is(Tag.Decorable) || node.isAbstract()) builder.add("isAbstract", "abstract");
@@ -71,16 +71,27 @@ public class ValidatorFrameCreator {
 		return builder;
 	}
 
-	private Frame typeFrameOf(Node node) {
+	private Frame typeFrameOf(Node node, Node parent) {
 		String type = type(node);
 		if(!processedTypes.add(type)) return null;
 
-		FrameBuilder builder = new FrameBuilder("type", type).add("name", type);
+		FrameBuilder builder = new FrameBuilder("type", type).add("name", type).add("nameBoxed", boxed(type));
+
+		if(node.appliedAspects().stream().anyMatch(a -> a.type().equals("Word")))
+			builder.add("word").add("package", conf.workingPackage() + ".entities." + parent.name());
 
 		Parameter struct = parameter(node, "struct");
 		if (struct != null) builder.add("struct").add("struct").add("struct", structFrame(((Node) struct.values().get(0))));
 
 		return builder.toFrame();
+	}
+
+	private String nameBoxed(String type) {
+		return type.equals("int") ? "integer" : type;
+	}
+
+	private String boxed(String type) {
+		return type.equals("int") ? "integer" : type;
 	}
 
 	private Frame attrFrameOf(Node node) {
@@ -90,12 +101,18 @@ public class ValidatorFrameCreator {
 		builder.add("name", node.name()).add("owner", node.container().name()).add("type", type).add("package", conf.workingPackage());
 		builder.add("index", node.container().components().indexOf(node));
 
+		boolean optional = node.appliedAspects().stream().anyMatch(a -> a.type().equals("Optional"));
+		if(optional) builder.add("optional", new FrameBuilder("optional", "warning").add("name", node.name()).toFrame());
+
 		Parameter values = parameter(node, "values");
 		if (values != null) builder.add("value", values.values().stream().map(Object::toString).toArray());
 
 		Parameter defaultValue = parameter(node, "defaultValue");
-		if (defaultValue != null) builder.add("defaultValue", defaultValue(node, type, defaultValue));
-		else builder.add("required", new FrameBuilder("required").add("name", node.name()).toFrame());
+		if (defaultValue != null) {
+			builder.add("defaultValue", defaultValue(node, type, defaultValue));
+			if(!optional) builder.add("optional", new FrameBuilder("optional").add("name", node.name()).toFrame());
+		} else if(!optional)
+			builder.add("required", new FrameBuilder("required").add("name", node.name()).toFrame());
 
 		Parameter format = parameter(node, "format");
 		if (format != null) builder.add("format", format.values().get(0));

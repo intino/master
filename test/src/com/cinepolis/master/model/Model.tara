@@ -69,7 +69,7 @@ Entity Theater as ExtensionOf(Place)
     Attribute ipSegment as String
     Attribute ipTms as String
     Attribute shared as String
-    Attribute telephone as String
+    Attribute telephone as String Optional
     Attribute territory as String
     Attribute type as String
     Attribute area as Entity(Area)
