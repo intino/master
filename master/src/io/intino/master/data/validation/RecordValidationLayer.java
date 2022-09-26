@@ -7,8 +7,8 @@ import java.util.stream.Stream;
 
 public class RecordValidationLayer {
 
-	private final List<RecordValidator> generalValidators = new ArrayList<>();
-	private final Map<String, RecordValidator> validatorsPerType = new HashMap<>();
+	protected final List<RecordValidator> generalValidators = new ArrayList<>();
+	protected final Map<String, RecordValidator> validatorsPerType = new HashMap<>();
 
 	public Stream<Issue> validate(TripleRecordStore store) {
 		return store.stream().map(record -> validate(record, store)).reduce(Stream::concat).orElse(Stream.empty());
@@ -33,6 +33,11 @@ public class RecordValidationLayer {
 	public RecordValidationLayer setValidator(String type, RecordValidator validator) {
 		if(validator == null) return this;
 		validatorsPerType.put(type, validator);
+		return this;
+	}
+
+	public RecordValidationLayer removeValidator(String type) {
+		validatorsPerType.remove(type);
 		return this;
 	}
 }

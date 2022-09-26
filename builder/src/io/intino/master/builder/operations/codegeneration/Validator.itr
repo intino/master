@@ -1,8 +1,33 @@
+def type(validationLayer & class)
+	package $package;
+
+    public class $module+FirstUpperCase~RecordValidationLayer extends io.intino.master.data.validation.RecordValidationLayer {
+
+    	public $module+FirstUpperCase~RecordValidationLayer() {
+    		[$entity+putValidator...[$NL]]
+    	}
+    }
+end
+
+def type(validator & decorable)
+	package $package;
+
+	public class $name+FirstUpperCase~Validator extends Abstract$name+FirstUpperCase~Validator {
+		// You can override every validation method in Abstract$name+FirstUpperCase~Validator
+		// You can add or remove validations with validatorsPerField map
+
+		public $name+FirstUpperCase~Validator() {
+			//validatorsPerField.put("fieldName", this::validateField);
+		}
+	}
+end
+
 def type(validator & class)
 	package $package;
 
 	import io.intino.master.data.validation.Issue;
 	import io.intino.master.data.validation.RecordValidator;
+	import io.intino.master.data.validation.FieldValidator;
 	import io.intino.master.data.validation.TripleRecordStore;
 
 	import java.util.List;
@@ -10,7 +35,11 @@ def type(validator & class)
 	import java.util.Objects;
 	import java.util.stream.Stream;
 
-	public class $name+FirstUpperCase~Validator implements RecordValidator {
+	public [ $isAbstract+firstLowerCase] class $abstract+FirstUpperCase~$name+FirstUpperCase~Validator implements RecordValidator {
+
+		protected final Map<String, FieldValidator> validatorsPerField = new java.util.HashMap<>(); {
+			[$attribute+attribValidatorMap...[$NL]]
+		}
 
 		@Override
 		public Stream<Issue> validate(TripleRecord record, TripleRecordStore store) {
@@ -21,10 +50,7 @@ def type(validator & class)
 		}
 
 		protected Stream<Issue> validate(Map.Entry<String, List<TripleRecord.Value>> attrib, TripleRecord record, TripleRecordStore store) {
-			switch(attrib.getKey()) {
-				[$attribute+attribSwitchCase...[$NL]]
-				default: return Stream.empty();
-			}
+			return validatorsPerField.getOrDefault(attrib.getKey(), FieldValidator.none()).validate(attrib.getValue(), record, store);
 		}
 
 		[$attribute+validationMethod...[$NL$NL]]
@@ -33,18 +59,18 @@ def type(validator & class)
 	}
 end
 
-def type(attribute) trigger(attribSwitchCase)
-	case "$name": return validate$name+FirstUpperCase~(attrib.getValue(), record, store);
+def type(attribute) trigger(attribValidatorMap)
+	validatorsPerField.put("$name+firstLowerCase", this::validate$name+FirstUpperCase);
 end
 
 def type(attribute & entity) trigger(validationMethod)
 	protected Stream<Issue> validate$name+FirstUpperCase~(List<TripleRecord.Value> values, TripleRecord record, TripleRecordStore store) {
 		[$required+attributeNotDefined]
 		[$optional+attributeNotDefined]
-		if(values.size() > 1) return Stream.of(Issue.error("$name is defined " + values.size() + " times.").source(values.get(0).source()));
+		if(values.size() > 1) return Stream.of(Issue.error("{"+record.id()+"} " + "$name is defined " + values.size() + " times.").source(values.get(0).source()));
         return store.get(values.get(0).get()) != null
         	? Stream.empty()
-        	: Stream.of(Issue.error("$name+FirstUpperCase " + values.get(0).get() + " does not exist.").source(values.get(0).source()));
+        	: Stream.of(Issue.error("{"+record.id()+"} " + "$name+FirstUpperCase " + values.get(0).get() + " does not exist.").source(values.get(0).source()));
 	}
 end
 
@@ -52,10 +78,10 @@ def type(attribute) !type(string) trigger(validationMethod)
 	protected Stream<Issue> validate$name+FirstUpperCase~(List<TripleRecord.Value> values, TripleRecord record, TripleRecordStore store) {
 		[$required+attributeNotDefined]
 		[$optional+attributeNotDefined]
-		if(values.size() > 1) return Stream.of(Issue.error("$name is defined " + values.size() + " times.").source(values.get(0).source()));
+		if(values.size() > 1) return Stream.of(Issue.error("{"+record.id()+"} " + "$name is defined " + values.size() + " times.").source(values.get(0).source()));
 		return is$type+FirstUpperCase~(values.get(0).get())
 			? Stream.empty()
-			: Stream.of(Issue.error("$name is an invalid $type: " + values.get(0).get()).source(values.get(0).source()));
+			: Stream.of(Issue.error("{"+record.id()+"} " + "$name is an invalid $type: " + values.get(0).get()).source(values.get(0).source()));
 	}
 end
 
@@ -63,17 +89,17 @@ def type(attribute) type(string) trigger(validationMethod)
 	protected Stream<Issue> validate$name+FirstUpperCase~(List<TripleRecord.Value> values, TripleRecord record, TripleRecordStore store) {
 		[$required+attributeNotDefined]
 		[$optional+attributeNotDefined]
-		if(values.size() > 1) return Stream.of(Issue.error("$name is defined " + values.size() + " times.").source(values.get(0).source()));
+		if(values.size() > 1) return Stream.of(Issue.error("{"+record.id()+"} " + "$name is defined " + values.size() + " times.").source(values.get(0).source()));
 		return Stream.empty();
 	}
 end
 
 def type(required) trigger(attributeNotDefined)
-	if(values.isEmpty() || values.get(0).isEmpty()) return Stream.of(Issue.error("$name is not defined.").source(record.source()));
+	if(values.isEmpty() || values.get(0).isEmpty()) return Stream.of(Issue.error("{"+record.id()+"} " + "$name is not defined.").source(record.source()));
 end
 
 def type(optional & warning) trigger(attributeNotDefined)
-	if(values.isEmpty() || values.get(0).isEmpty()) return Stream.of(Issue.warning("$name is not defined.").source(record.source()));
+	if(values.isEmpty() || values.get(0).isEmpty()) return Stream.of(Issue.warning("{"+record.id()+"} " + "$name is not defined.").source(record.source()));
 end
 
 def type(optional) trigger(attributeNotDefined)
@@ -190,4 +216,8 @@ end
 
 def trigger(parse)
 	values.get($index)
+end
+
+def type(entity) !type(abstract) trigger(putValidator)
+	validatorsPerType.put("$name+firstLowerCase", new $name+FirstUpperCase~Validator());
 end

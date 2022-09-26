@@ -1,6 +1,6 @@
 package io.intino.master.data;
 
-import io.intino.master.data.validation.IssueReport;
+import io.intino.master.data.validation.report.IssueReport;
 import io.intino.master.data.validation.RecordValidator.TripleRecord;
 import io.intino.master.data.validation.RecordValidator.TripleRecord.Value;
 import io.intino.master.data.validation.TripleRecordStore;

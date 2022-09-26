@@ -50,17 +50,17 @@ public class ValidatorFrameCreator {
 	}
 
 	public Map<String, Frame> create(Node node) {
+		if(node.is(Tag.Abstract)) return null;
 		Map<String, Frame> map = new HashMap<>(4);
 		map.put(calculateValidatorPath(node, conf.workingPackage()), frameOf(node).toFrame());
-		if (node.is(Tag.Decorable))
-			map.put(calculateDecorableValidatorPath(node, conf.workingPackage()), frameOf(node).add("decorable").toFrame());
+		if(node.is(Tag.Decorable)) map.put(calculateDecorableValidatorPath(node, conf.workingPackage()), frameOf(node).add("decorable").toFrame());
 		return map;
 	}
 
 	private FrameBuilder frameOf(Node node) {
 		processedTypes.clear();
 		FrameBuilder builder = new FrameBuilder("validator", "class")
-				.add("package", conf.workingPackage())
+				.add("package", conf.workingPackage() + DOT + "validators")
 				.add("name", node.name())
 				.add("attribute", node.components().stream().map(this::attrFrameOf).toArray())
 				.add("type", node.components().stream().map(c -> typeFrameOf(c, node)).filter(Objects::nonNull).toArray());

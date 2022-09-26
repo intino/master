@@ -45,9 +45,13 @@ public class Issue implements Comparable<Issue> {
 		return this;
 	}
 
+	public String levelMsg() {
+		return "[" + level + "] " + message;
+	}
+
 	@Override
 	public String toString() {
-		return level + ": " + message + (source == null ? "" : "\n\t" + source.get());
+		return levelMsg() + (source == null ? "" : "\n\t" + source.get());
 	}
 
 	@Override

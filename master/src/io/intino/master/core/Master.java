@@ -9,6 +9,7 @@ import com.hazelcast.topic.Message;
 import io.intino.alexandria.logger.Logger;
 import io.intino.master.data.DataLoader;
 import io.intino.master.data.validation.*;
+import io.intino.master.data.validation.report.IssueReport;
 import io.intino.master.io.TriplesFileReader;
 import io.intino.master.io.TriplesFileWriter;
 import io.intino.master.model.Triple;
@@ -117,7 +118,7 @@ public class Master {
 	}
 
 	private File issuesFile() {
-		return new File(config.logDirectory(), config.instanceName() + "_issues_report.txt");
+		return new File(config.logDirectory(), config.instanceName() + "_issues_report.html");
 	}
 
 	protected void setupListeners() {

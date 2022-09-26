@@ -134,7 +134,7 @@ def type(map) trigger(set)
 	case "$name":
 		this.$name+firstLowerCase = triple.value() == null ? null : java.util.Arrays.stream(triple.value().split(";"))
 			.map(e -> e.split("="))
-			.collect(java.util.stream.Collectors.toMap(e -> e[0].trim(), e -> e[1].trim()));
+			.collect(java.util.stream.Collectors.toMap(e -> e$[0].trim(), e -> e$[1].trim()));
 		break;
 end
 

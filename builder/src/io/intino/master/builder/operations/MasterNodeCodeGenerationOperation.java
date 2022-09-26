@@ -55,12 +55,19 @@ public class MasterNodeCodeGenerationOperation extends ModelOperation {
 			createEntities(model);
 			createStructs(model);
 			createMaster(model);
+			createValidationLayer(model);
 			compilationUnit.addOutputItems(outMap);
 			compilationUnit.compilationDifferentialCache().saveCache(model.components().stream().map(c -> ((NodeImpl) c).getHashCode()).collect(Collectors.toList()));
 		} catch (Throwable e) {
 			LOG.log(java.util.logging.Level.SEVERE, "Error during java className generation: " + e.getMessage(), e);
 			throw new CompilationFailedException(compilationUnit.getPhase(), compilationUnit, e);
 		}
+	}
+
+	private void createValidationLayer(Model model) {
+		final Map<String, Map<String, String>> outputs = createValidationLayerClass(model);
+		fillOutMap(outputs);
+		outputs.values().forEach(this::write);
 	}
 
 	private void createEntities(Model model) {
@@ -100,6 +107,21 @@ public class MasterNodeCodeGenerationOperation extends ModelOperation {
 				.filter(node -> node.type().equals("Struct") && ((NodeImpl) node).isDirty() && !((NodeImpl) node).isVirtual())
 				.forEach(node -> renderStructNode(outputs, node));
 		return outputs;
+	}
+
+	private Map<String, Map<String, String>> createValidationLayerClass(Model model) {
+		String qn = conf.workingPackage() + DOT + "validators" + DOT + firstUpperCase().format(javaValidName().format(conf.getModule() + "RecordValidationLayer").toString());
+
+		return Map.of(model.components().get(0).file(),
+				Map.of(
+						destination(qn), customize(new ValidatorTemplate()).render(
+								new FrameBuilder("validationLayer", "class")
+										.add("module", conf.getModule())
+										.add("entity", entities(model, ""))
+										.add("package", conf.workingPackage() + ".validators")
+										.toFrame())
+				)
+		);
 	}
 
 	private Map<String, Map<String, String>> createMasterClass(Model model) {
@@ -164,6 +186,7 @@ public class MasterNodeCodeGenerationOperation extends ModelOperation {
 
 	private void renderValidatorNode(Map<String, Map<String, String>> map, Node node) {
 		Map<String, Frame> frames = new ValidatorFrameCreator(conf).create(node);
+		if(frames == null) return;
 		if (!map.containsKey(node.file())) map.put(node.file(), new LinkedHashMap<>());
 		frames.forEach((path, frame) -> {
 			String destination = validatorDestination(path, frame);
