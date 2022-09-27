@@ -77,6 +77,7 @@ public class EntityFrameCreator {
 		if (entity != null) builder.add("entity", ((Node) entity.values().get(0)).name());
 		Parameter struct = parameter(node, "struct");
 		if (struct != null) builder.add("struct", structFrame(((Node) struct.values().get(0))));
+		builder.add("attribute", builder.toFrame());
 		return builder.toFrame();
 	}
 

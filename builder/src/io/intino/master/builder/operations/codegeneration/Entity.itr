@@ -35,20 +35,16 @@ def type(entity & class)
 
 		public $name+FirstUpperCase add(Triple triple) {
 			switch(triple.predicate()) {
-				[$attribute+set...[$NL]]
-				default:
-				 super.add(triple);
-				 break;
+				[$attribute+addSwitchCase...[$NL]]
+				default: super.add(triple); break;
 			}
 			return ($name+FirstUpperCase) this;
 		}
 
 		public $name+FirstUpperCase remove(Triple triple) {
 			switch(triple.predicate()) {
-				[$attribute+set...[$NL]]
-				default:
-				super.remove(triple);
-				break;
+				[$attribute+removeSwitchCase...[$NL]]
+				default: super.remove(triple); break;
 			}
 			return ($name+FirstUpperCase) this;
 		}
@@ -59,6 +55,8 @@ def type(entity & class)
 			super.extraAttributes().entrySet().stream().map(e -> new Triple(id().get(), e.getKey(), e.getValue())).forEach(triples::add);
 			return triples;
 		}]
+
+		[$attribute+addAndRemoveMethod...[$NL$NL]]
     }
 end
 
@@ -70,84 +68,107 @@ def trigger(super)
 	super(id, master);
 end
 
-def type(boolean) trigger(set)
-	case "$name":
-	 	this.$name+firstLowerCase = triple.value() == null ? null : Boolean.parseBoolean(triple.value());
-	 	break;
+def trigger(addSwitchCase)
+	case "$name": add$name+FirstUpperCase~(triple); break;
 end
 
-def type(integer) trigger(set)
-	case "$name":
-		this.$name+firstLowerCase = triple.value() == null ? null : Integer.parseInt(triple.value());
-		break;
+def trigger(removeSwitchCase)
+	case "$name": remove$name+FirstUpperCase~(triple); break;
 end
 
-def type(real) trigger(set)
-	case "$name":
-		this.$name+firstLowerCase = triple.value() == null ? null : Double.parseDouble(triple.value());
-		break;
+def trigger(addAndRemoveMethod)
+	protected void add$name+FirstUpperCase~(Triple triple) {
+		$attribute+add
+	}
+
+	protected void remove$name+FirstUpperCase~(Triple triple) {
+    	$attribute+remove
+    }
 end
 
-def type(long) trigger(set)
-	case "$name":
-		this.$name+firstLowerCase = triple.value() == null ? null : Long.parseLong(triple.value());
-		break;
+def type(boolean) trigger(add)
+	this.$name+firstLowerCase = triple.value() == null ? null : Boolean.parseBoolean(triple.value());
 end
 
-def type(word) trigger(set)
-	case "$name":
-		this.$name+firstLowerCase = triple.value() == null ? null : $type+firstUpperCase.valueOf(triple.value());
-		break;
+def type(integer) trigger(add)
+	this.$name+firstLowerCase = triple.value() == null ? null : Integer.parseInt(triple.value());
 end
 
-def type(string) trigger(set)
-	case "$name":
-		this.$name+firstLowerCase = triple.value();
-		break;
+def type(real) trigger(add)
+	this.$name+firstLowerCase = triple.value() == null ? null : Double.parseDouble(triple.value());
 end
 
-def type(entity) trigger(set)
-	case "$name":
-		this.$name+firstLowerCase~Reference = triple.value();
-		break;
+def type(long) trigger(add)
+	this.$name+firstLowerCase = triple.value() == null ? null : Long.parseLong(triple.value());
 end
 
-def type(date) trigger(set)
-	case "$name":
-		this.$name+firstLowerCase = java.time.LocalDate.parse(triple.value(), java.time.format.DateTimeFormatter.ofPattern("$format"));
-		break;
+def type(word) trigger(add)
+	this.$name+firstLowerCase = triple.value() == null ? null : $type+firstUpperCase.valueOf(triple.value());
 end
 
-def type(datetime) trigger(set)
-	case "$name":
-		this.$name+firstLowerCase = java.time.LocalDateTime.parse(triple.value(), java.time.format.DateTimeFormatter.ofPattern("$format"));
-		break;
+def type(string) trigger(add)
+	this.$name+firstLowerCase = triple.value();
 end
 
-def type(instant) trigger(set)
-	case "$name":
-		this.$name+firstLowerCase = java.time.Instant.ofEpochMilli(Long.parseLong(triple.value()));
-		break;
+def type(entity) trigger(add)
+	this.$name+firstLowerCase~Reference = triple.value();
 end
 
-def type(map) trigger(set)
-	case "$name":
-		this.$name+firstLowerCase = triple.value() == null ? null : java.util.Arrays.stream(triple.value().split(";"))
+def type(date) trigger(add)
+	this.$name+firstLowerCase = triple.value() == null ? null : java.time.LocalDate.parse(triple.value(), java.time.format.DateTimeFormatter.ofPattern("$format"));
+end
+
+def type(datetime) trigger(add)
+	this.$name+firstLowerCase = triple.value() == null ? null : java.time.LocalDateTime.parse(triple.value(), java.time.format.DateTimeFormatter.ofPattern("$format"));
+end
+
+def type(instant) trigger(add)
+	this.$name+firstLowerCase = triple.value() == null ? null : java.time.Instant.ofEpochMilli(Long.parseLong(triple.value()));
+end
+
+def type(map) trigger(add)
+	this.$name+firstLowerCase = triple.value() == null
+		? null
+		: java.util.Arrays.stream(triple.value().split(";"))
 			.map(e -> e.split("="))
 			.collect(java.util.stream.Collectors.toMap(e -> e$[0].trim(), e -> e$[1].trim()));
-		break;
 end
 
-def type(struct) trigger(set)
-	case "$name": {
-		if (triple.value() == null) {
-			this.$name+firstLowerCase = null;
-		} else {
-			List<String> values = java.util.Arrays.stream(triple.value().split(",", -1)).map(v -> v.trim()).collect(java.util.stream.Collectors.toList());
-			this.$name+firstLowerCase = triple.value() == null ? null : $struct+call;
-		}
-		break;
+def type(struct) trigger(add)
+	if (triple.value() == null) {
+		this.$name+firstLowerCase = null;
+	} else {
+		List<String> values = java.util.Arrays.stream(triple.value().split(",", -1)).map(v -> v.trim()).collect(java.util.stream.Collectors.toList());
+		this.$name+firstLowerCase = triple.value() == null ? null : $struct+call;
 	}
+end
+
+def type(boolean) trigger(remove)
+	this.$name+firstLowerCase = false;
+end
+
+def type(integer) trigger(remove)
+	this.$name+firstLowerCase = 0;
+end
+
+def type(real) trigger(remove)
+	this.$name+firstLowerCase = 0;
+end
+
+def type(long) trigger(remove)
+	this.$name+firstLowerCase = 0;
+end
+
+def type(entity) trigger(remove)
+	this.$name+firstLowerCase~Reference = null;
+end
+
+def trigger(remove)
+	this.$name+firstLowerCase = null;
+end
+
+def type(struct) trigger(remove)
+	this.$name+firstLowerCase = null;
 end
 
 
