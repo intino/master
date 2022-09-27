@@ -13,12 +13,7 @@ def type(validator & decorable)
 	package $package;
 
 	public class $name+FirstUpperCase~Validator extends Abstract$name+FirstUpperCase~Validator {
-		// You can override every validation method in Abstract$name+FirstUpperCase~Validator
-		// You can add or remove validations with validatorsPerField map
 
-		public $name+FirstUpperCase~Validator() {
-			//validatorsPerField.put("fieldName", this::validateField);
-		}
 	}
 end
 

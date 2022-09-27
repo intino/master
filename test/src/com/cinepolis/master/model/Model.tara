@@ -53,7 +53,7 @@ Struct GeoPoint
 	Attribute longitude as Double
 //	Attribute distanceTo as Function(point as GeoPoint) -> Integer
 
-Entity Theater as ExtensionOf(Place)
+Entity Theater as ExtensionOf(Place) is decorable
 	Attribute address as String
     Attribute city as String
     Attribute coordinates as Struct(GeoPoint)
@@ -81,7 +81,7 @@ Entity Screen as ExtensionOf(Place)
 	Attribute seats as Integer
 	Attribute ipOffset as Integer
 	Attribute optimized as Boolean(defaultValue = false)
-	Attribute type as Word("STANDARD" "LED" "LASER" "MACRO_XE" "IMAX", defaultValue = "STANDARD")
+	Attribute type as Word("STANDARD" "LED" "LASER" "MACRO_XE" "IMAX" "VR", defaultValue = "STANDARD")
 	Attribute tech3D as Word("IMAX" "IMAXbarco" "IMAXchristie" "REALD")
 	Attribute tech4D as Word("_4DX")
 	Attribute setup as Word("STANDARD" "JUNIOR" "PREMIUM", defaultValue = "STANDARD")
