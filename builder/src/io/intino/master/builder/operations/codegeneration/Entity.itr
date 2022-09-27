@@ -21,14 +21,14 @@ def type(entity & class)
 
 	public[ $isAbstract+firstLowerCase] class $abstract~$name+FirstUpperCase extends $parent {
 
-		private $package.MasterClient master;
+		protected final $package.MasterClient master;
 
 		[$attribute+wordDeclaration...[$NL]]
 		[$attribute+field...[$NL]]
 
 		public $abstract~$name+FirstUpperCase(String id, $package.MasterClient master) {
 			$parent+super
-			this.master = master;
+			this.master = java.util.Objects.requireNonNull(master);
 		}
 
 		[$attribute+getter...[$NL$NL]]
