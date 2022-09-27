@@ -94,7 +94,7 @@ def type(integer) trigger(add)
 	this.$name+firstLowerCase = triple.value() == null ? null : Integer.parseInt(triple.value());
 end
 
-def type(real) trigger(add)
+def type(double) trigger(add)
 	this.$name+firstLowerCase = triple.value() == null ? null : Double.parseDouble(triple.value());
 end
 
@@ -151,7 +151,7 @@ def type(integer) trigger(remove)
 	this.$name+firstLowerCase = 0;
 end
 
-def type(real) trigger(remove)
+def type(double) trigger(remove)
 	this.$name+firstLowerCase = 0;
 end
 
