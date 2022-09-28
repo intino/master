@@ -6,7 +6,7 @@ def type(master & interface)
 	import java.util.UUID;
 	import java.util.stream.Stream;
 	import java.util.stream.Collectors;
-	import com.cinepolis.master.model.entities.*;
+	import $package.entities.*;
 	import io.intino.master.model.Triple;
 	import com.hazelcast.core.EntryListener;
 
@@ -40,7 +40,7 @@ def type(master & interface)
     	}
 
     	final class Config {
-    		private String instanceName = "com.cinepolis.master.Client-" + UUID.randomUUID();
+    		private String instanceName = "$package.MasterClient-" + UUID.randomUUID();
     		private List<String> addresses = List.of("localhost:5701");
     		private Type type = Type.getDefault();
     		private boolean readOnly = true;
@@ -113,7 +113,7 @@ def type(master & cached)
 	import io.intino.master.model.TripleRecord;
 	import io.intino.master.model.Triple;
 
-	import com.cinepolis.master.model.entities.*;
+	import $package.entities.*;
 	import io.intino.master.serialization.MasterSerializer;
 	import io.intino.master.serialization.MasterSerializers;
 
@@ -299,7 +299,7 @@ def type(master & lazy)
 	import io.intino.master.model.Triple;
 
 	import io.intino.master.model.Entity;
-	import com.cinepolis.master.model.entities.*;
+	import $package.entities.*;
 	import io.intino.master.serialization.MasterSerializer;
 	import io.intino.master.serialization.MasterSerializers;
 

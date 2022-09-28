@@ -5,7 +5,9 @@ import io.intino.master.serialization.MasterSerializer;
 import io.intino.master.serialization.MasterSerializers;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class MasterConfig {
 
@@ -27,6 +29,10 @@ public class MasterConfig {
 		this.port = Integer.parseInt(arguments.getOrDefault("port", String.valueOf(port)));
 		this.serializer = MasterSerializers.get(arguments.getOrDefault("serializer", MasterSerializers.Standard.getDefault()));
 		this.host = arguments.getOrDefault("host", host);
+	}
+
+	public MasterConfig(String[] args) {
+		this(toMap(args));
 	}
 
 	public File dataDirectory() {
@@ -90,5 +96,12 @@ public class MasterConfig {
 	public MasterConfig validationLayers(ValidationLayers validationLayers) {
 		this.validationLayers = validationLayers;
 		return this;
+	}
+
+	private static Map<String, String> toMap(String[] args) {
+		return Arrays.stream(args).map(s -> s.split("=")).collect(Collectors.toMap(
+				s -> s[0].trim(),
+				s -> s[1].trim()
+		));
 	}
 }

@@ -110,13 +110,14 @@ public class MasterNodeCodeGenerationOperation extends ModelOperation {
 	}
 
 	private Map<String, Map<String, String>> createValidationLayerClass(Model model) {
-		String qn = conf.workingPackage() + DOT + "validators" + DOT + firstUpperCase().format(javaValidName().format(conf.getModule() + "RecordValidationLayer").toString());
+		String module = javaValidName().format(conf.getModule()).toString();
+		String qn = conf.workingPackage() + DOT + "validators" + DOT + firstUpperCase().format(module) + "RecordValidationLayer";
 
 		return Map.of(model.components().get(0).file(),
 				Map.of(
 						destination(qn), customize(new ValidatorTemplate()).render(
 								new FrameBuilder("validationLayer", "class")
-										.add("module", conf.getModule())
+										.add("module", module)
 										.add("entity", entities(model, ""))
 										.add("package", conf.workingPackage() + ".validators")
 										.toFrame())
