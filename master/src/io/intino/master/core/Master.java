@@ -35,7 +35,7 @@ public class Master {
 	private final MasterConfig config;
 	private IMap<String, String> metadataMap;
 	private IMap<String, String> masterMap;
-	private final ValidationLayers validationLayers;
+	private volatile ValidationLayers validationLayers;
 
 	public Master(MasterConfig config) {
 		this.config = requireNonNull(config);
@@ -220,6 +220,15 @@ public class Master {
 
 	private MasterSerializer serializer() {
 		return config.serializer();
+	}
+
+	public ValidationLayers validationLayers() {
+		return validationLayers;
+	}
+
+	public Master validationLayers(ValidationLayers validationLayers) {
+		this.validationLayers = validationLayers;
+		return this;
 	}
 
 	protected Config getHazelcastConfig() {

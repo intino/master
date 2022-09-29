@@ -2,6 +2,7 @@ package io.intino.master.data.validation.report;
 
 import io.intino.master.data.validation.Issue;
 import io.intino.master.data.validation.TripleSource;
+import io.intino.master.data.validation.validators.DuplicatedTripleRecordValidator;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -65,12 +66,26 @@ public class HtmlIssueReportDocumentBuilder {
 	}
 
 	private String render(Issue issue) {
+		if(issue.source() instanceof DuplicatedTripleRecordValidator.CombinedTripleSource) return renderIssueCombinedSource(issue);
 		String level = issue.level() == Issue.Level.Error ? "danger" : "warning";
 		Integer line = !(issue.source() instanceof TripleSource.FileTripleSource) ? null : ((TripleSource.FileTripleSource) issue.source()).line();
 		return "<div class=\"list-group-item list-group-item-" + level + " mb-1\">"
 				+ "<div><i class=\"fa-solid fa-skating fa-fw\" style=\"background:DodgerBlue\"></i>" + issue.levelMsg() + "</div>"
 				+ (line == null ? "" : ("<small>At line " + line + "</small>"))
 				+ "</div>";
+	}
+
+	private String renderIssueCombinedSource(Issue issue) {
+		String level = issue.level() == Issue.Level.Error ? "danger" : "warning";
+
+		StringBuilder sb = new StringBuilder("<div class=\"list-group-item list-group-item-" + level + " mb-1\">");
+		sb.append("<p><b>[").append(issue.level().name()).append("]</b> ").append(issue.message()).append("</p>");
+
+		for(String name : ((DuplicatedTripleRecordValidator.CombinedTripleSource)issue.source()).names()) {
+			sb.append("<p><small>\t").append(name).append("</small></p>");
+		}
+
+		return sb.append("</div>").toString();
 	}
 
 	private String renderSources() {

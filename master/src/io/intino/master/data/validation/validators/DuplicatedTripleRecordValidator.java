@@ -33,12 +33,16 @@ public class DuplicatedTripleRecordValidator implements RecordValidator {
 				.source(new CombinedTripleSource(e.getValue().stream().map(TripleRecord.Value::source).map(TripleSource::get).collect(Collectors.toList())));
 	}
 
-	private static class CombinedTripleSource implements TripleSource {
+	public static class CombinedTripleSource implements TripleSource {
 
 		private final List<String> names;
 
 		public CombinedTripleSource(List<String> names) {
 			this.names = names;
+		}
+
+		public List<String> names() {
+			return names;
 		}
 
 		@Override
@@ -48,7 +52,7 @@ public class DuplicatedTripleRecordValidator implements RecordValidator {
 
 		@Override
 		public String get() {
-			return "Sources:\n\t\t" + names.stream().collect(Collectors.joining("\n\t\t"));
+			return "Sources:\n\t\t" + String.join("\n\t\t", names);
 		}
 	}
 }
