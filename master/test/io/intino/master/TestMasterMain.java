@@ -13,6 +13,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static io.intino.master.data.validation.Issue.Type.INVALID_VALUE;
+import static io.intino.master.data.validation.Issue.Type.MISSING_ATTRIBUTE;
+
 public class TestMasterMain {
 
 	public static void main(String[] args) {
@@ -27,9 +30,9 @@ public class TestMasterMain {
 		validationLayers.tripleValidationLayer().addValidator(new SyntaxTripleValidator());
 
 		validationLayers.recordValidationLayer().setValidator("theater", (record, store) -> {
-			if(record.get("ipSegment").isEmpty()) return Stream.of(Issue.warning("Theater does not have ipSegment").source(record.source()));
+			if(record.get("ipSegment").isEmpty()) return Stream.of(Issue.warning(MISSING_ATTRIBUTE, "Theater does not have ipSegment").source(record.source()));
 			RecordValidator.TripleRecord.Value value = record.get("ipSegment").get(0);
-			if(!value.get().endsWith(".")) return Stream.of(Issue.error("ipSegment must end with .").source(value.source()));
+			if(!value.get().endsWith(".")) return Stream.of(Issue.error(INVALID_VALUE, "ipSegment must end with .").source(value.source()));
 			return Stream.empty();
 		});
 
@@ -46,12 +49,12 @@ public class TestMasterMain {
 		if(!triple.type().equals("theater")) return null;
 		if(!triple.predicate().equals("ipSegment")) return null;
 
-		return triple.value().endsWith(".") ? null : Stream.of(Issue.error("IpSegment must end with ."));
+		return triple.value().endsWith(".") ? null : Stream.of(Issue.error(INVALID_VALUE, "IpSegment must end with ."));
 	}
 
 	private static Stream<Issue> validateTheaterId(Triple triple, TripleSource source) {
 		if(!triple.type().equals("theater")) return null;
-		if(!isInt(triple.subject()) || triple.subject().length() != 7) return Stream.of(Issue.error("Theater id must be an integer of 7 digits").source(source));
+		if(!isInt(triple.subject()) || triple.subject().length() != 7) return Stream.of(Issue.error(INVALID_VALUE, "Theater id must be an integer of 7 digits").source(source));
 		return null;
 	}
 
@@ -127,7 +130,7 @@ public class TestMasterMain {
 			if(value.isEmpty()) return Stream.empty();
 			TripleRecord.Value v = value.get(0);
 			if(v.isEmpty()) return Stream.empty();
-			if(!isBoolean(v.get())) return Stream.of(Issue.error("Theater.enabled must be a boolean [false, true], but was " + v.get()).source(v.source()));
+			if(!isBoolean(v.get())) return Stream.of(Issue.error(INVALID_VALUE, "Theater.enabled must be a boolean [false, true], but was " + v.get()).source(v.source()));
 			return Stream.empty();
 		}
 

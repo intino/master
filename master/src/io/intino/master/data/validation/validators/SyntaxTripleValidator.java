@@ -9,23 +9,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static io.intino.master.data.validation.Issue.Type.SYNTAX_ERROR;
+
 public class SyntaxTripleValidator implements TripleValidator {
 
 	@Override
 	public Stream<Issue> validate(String tripleLine, TripleSource source) {
 		String[] rawTriple = tripleLine.split(Triple.SEPARATOR);
 		if (rawTriple.length != 3)
-			return Stream.of(Issue.error("Triple (" + tripleLine + ") is malformed: it should have 3 fields separated by TAB, but has " + rawTriple.length).source(source));
+			return Stream.of(Issue.error(SYNTAX_ERROR, "Triple (" + tripleLine + ") is malformed: it should have 3 fields separated by TAB, but has " + rawTriple.length).source(source));
 
 		Triple triple = new Triple(tripleLine);
 		List<Issue> issues = new ArrayList<>(2);
 
 		if (isNullOrBlank(triple.subject()))
-			issues.add(Issue.error("Triple (" + triple.subject() + ") subject cannot be null nor blank").source(source));
+			issues.add(Issue.error(SYNTAX_ERROR, "Triple (" + triple.subject() + ") subject cannot be null nor blank").source(source));
 		if (isNullOrBlank(triple.predicate()))
-			issues.add(Issue.error("Triple (" + triple.subject() + ") predicate cannot be null nor blank").source(source));
+			issues.add(Issue.error(SYNTAX_ERROR, "Triple (" + triple.subject() + ") predicate cannot be null nor blank").source(source));
 		if (triple.predicate().contains(" "))
-			issues.add(Issue.error("Triple (" + triple.subject() + ") predicates cannot contain spaces").source(source));
+			issues.add(Issue.error(SYNTAX_ERROR, "Triple (" + triple.subject() + ") predicates cannot contain spaces").source(source));
 
 		return issues.stream();
 	}

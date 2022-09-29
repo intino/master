@@ -11,7 +11,7 @@ public class RecordValidationLayer {
 	protected final Map<String, RecordValidator> validatorsPerType = new HashMap<>();
 
 	public Stream<Issue> validate(TripleRecordStore store) {
-		return store.stream().map(record -> validate(record, store)).reduce(Stream::concat).orElse(Stream.empty());
+		return store.stream().flatMap(record -> validate(record, store));
 	}
 
 	public Stream<Issue> validate(TripleRecord record, TripleRecordStore store) {

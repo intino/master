@@ -2,6 +2,7 @@ package io.intino.master.data.validation.report;
 
 import io.intino.master.data.validation.Issue;
 import io.intino.master.data.validation.TripleSource;
+import io.intino.master.data.validation.report.IssueReport.IssuesCount;
 import io.intino.master.data.validation.validators.DuplicatedTripleRecordValidator;
 
 import java.io.BufferedReader;
@@ -37,7 +38,8 @@ public class HtmlIssueReportDocumentBuilder {
 
 		template.set("sources-count", String.valueOf(issueReport.getAll().size()));
 
-		template.set("sources", renderSources());
+		template.set("issues", renderIssues());
+		template.set("issues-chart-data", renderIssuesChartData());
 		template.set("content", renderContent());
 
 		builder.append(template.html());
@@ -49,16 +51,63 @@ public class HtmlIssueReportDocumentBuilder {
 		}
 	}
 
-	private String renderContent() {
+	private String renderContent1() {
 		StringBuilder sb = new StringBuilder();
 		for(var entry : sortByNumErrors(new HashSet<>(issueReport.getAll().entrySet()))) {
-			sb.append("<h4>").append(entry.getKey()).append(" (").append(entry.getValue().size()).append("):</h4>");
+			sb.append("<h4 id=\"").append(entry.getKey().hashCode()).append("\">").append(entry.getKey()).append(" (").append(entry.getValue().size()).append("):</h4>");
 			sb.append("<ul class=\"list-group\">");
 			entry.getValue().stream().filter(e -> e.level() == Issue.Level.Error).sorted(sortByLine()).map(this::render).forEach(sb::append);
 			entry.getValue().stream().filter(e -> e.level() == Issue.Level.Warning).sorted(sortByLine()).map(this::render).forEach(sb::append);
 			sb.append("</ul>").append(BLANK_LINE);
 		}
 		return sb.toString();
+	}
+
+	private String renderContent() {
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("<div class=\"accordion\" id=\"accordionContent\">");
+
+		int index = 0;
+
+		for(var entry : sortByNumErrors(new HashSet<>(issueReport.getAll().entrySet()))) {
+			renderCard(sb, entry, index++);
+		}
+
+		sb.append("</div>");
+
+		return sb.toString();
+	}
+
+	private void renderCard(StringBuilder sb, Map.Entry<String, List<Issue>> entry, int index) {
+		int errors = numErrors(entry.getValue());
+		int warnings = entry.getValue().size() - errors;
+
+		sb.append("<div class=\"card\">");
+		// Head: source + badges
+		sb.append("<div class=\"card-header d-flex\" id=\"heading").append(index).append("\">");
+		sb.append("<h5 class=\"mb-0\">");
+		sb.append(String.format("<div class=\"btn\" type=\"button\" data-toggle=\"collapse\" data-target=\"#collapse%d\" aria-expanded=\"true\" aria-controls=\"collapse%d\">", index, index));
+		sb.append("<div>").append(entry.getKey()).append("</div>");
+		sb.append("</div></h5>");
+		sb.append(badgeGroup(warnings, errors));
+		sb.append("</div>");
+		// Body: list of issues
+		sb.append(String.format("<div id=\"collapse%d\" class=\"collapse\" aria-labelledby=\"heading%d\" data-parent=\"#accordionContent\">", index, index));
+		sb.append("<div class=\"card-body\">");
+		sb.append("<ul class=\"list-group\">");
+		entry.getValue().stream().filter(e -> e.level() == Issue.Level.Error).sorted(sortByLine()).map(this::render).forEach(sb::append);
+		entry.getValue().stream().filter(e -> e.level() == Issue.Level.Warning).sorted(sortByLine()).map(this::render).forEach(sb::append);
+		sb.append("</ul>");
+		sb.append("</div></div></div>");
+	}
+
+	private String badgeGroup(int warnings, int errors) {
+		return "<div class=\"d-flex align-items-right ml-auto align-items-center ml-auto\">\n" +
+				"<span class=\"badge badge-danger badge-pill mr-1\">" + errors + "</span>\n" +
+				"<span class=\"badge badge-warning badge-pill mr-1\">" + warnings + "</span>\n" +
+				"<span class=\"badge badge-primary badge-pill mr-1\">" + (errors + warnings) + "</span>\n" +
+				"</div>";
 	}
 
 	private Comparator<? super Issue> sortByLine() {
@@ -68,10 +117,9 @@ public class HtmlIssueReportDocumentBuilder {
 	private String render(Issue issue) {
 		if(issue.source() instanceof DuplicatedTripleRecordValidator.CombinedTripleSource) return renderIssueCombinedSource(issue);
 		String level = issue.level() == Issue.Level.Error ? "danger" : "warning";
-		Integer line = !(issue.source() instanceof TripleSource.FileTripleSource) ? null : ((TripleSource.FileTripleSource) issue.source()).line();
 		return "<div class=\"list-group-item list-group-item-" + level + " mb-1\">"
 				+ "<div><i class=\"fa-solid fa-skating fa-fw\" style=\"background:DodgerBlue\"></i>" + issue.levelMsg() + "</div>"
-				+ (line == null ? "" : ("<small>At line " + line + "</small>"))
+				+ (issue.source() == null ? "" : ("<small>At " + issue.source().get() + "</small>"))
 				+ "</div>";
 	}
 
@@ -82,23 +130,38 @@ public class HtmlIssueReportDocumentBuilder {
 		sb.append("<p><b>[").append(issue.level().name()).append("]</b> ").append(issue.message()).append("</p>");
 
 		for(String name : ((DuplicatedTripleRecordValidator.CombinedTripleSource)issue.source()).names()) {
-			sb.append("<p><small>\t").append(name).append("</small></p>");
+			sb.append("<p><small>At ").append(name).append("</small></p>");
 		}
 
 		return sb.append("</div>").toString();
 	}
 
-	private String renderSources() {
+	private String renderIssues() {
 		StringBuilder sb = new StringBuilder();
-		for(var entry : sortByNumErrors(new HashSet<>(issueReport.getAll().entrySet()))) {
-			int errors = numErrors(entry.getValue());
-			int warnings = entry.getValue().size() - errors;
-			sb.append(listItemBadge(entry.getKey(), warnings, errors));
+		float total = issueReport.count();
+		for(Map.Entry<String, IssuesCount> entry : issueReport.issueTypes().entrySet()) {
+			IssuesCount count = entry.getValue();
+			String percentage = String.format("%.02f", count.total() / total * 100);
+			sb.append(listItemBadge(entry.getKey() + " <b>(" + percentage + "%)</b>", count.warnings(), count.errors()));
 		}
 		return sb.toString();
 	}
 
-	private Iterable<? extends Map.Entry<String, List<Issue>>> sortByNumErrors(Set<Map.Entry<String, List<Issue>>> entrySet) {
+	private String renderIssuesChartData() {
+		StringBuilder sb = new StringBuilder();
+		float total = issueReport.count();
+		boolean first = true;
+		for(Map.Entry<String, IssuesCount> entry : issueReport.issueTypes().entrySet()) {
+			if(!first) sb.append(", ");
+			first = false;
+			IssuesCount count = entry.getValue();
+			String percentage = String.format("%.02f", count.total() / total * 100).replace(",", ".");
+			sb.append("{ name: '").append(entry.getKey()).append("'").append(", y: ").append(percentage).append("}");
+		}
+		return sb.toString();
+	}
+
+	private List<? extends Map.Entry<String, List<Issue>>> sortByNumErrors(Set<Map.Entry<String, List<Issue>>> entrySet) {
 		return entrySet.stream().sorted((e1, e2) -> -Integer.compare(numErrors(e1.getValue()), numErrors(e2.getValue()))).collect(toList());
 	}
 
@@ -106,9 +169,25 @@ public class HtmlIssueReportDocumentBuilder {
 		return (int) issueList.stream().filter(issue -> issue.level().equals(Issue.Level.Error)).count();
 	}
 
+	private String itemBadge(String text, int warnings, int errors) {
+		return "<div class=\"d-flex\">"
+				+ "<div>"
+				+ text
+				+ "</div>\n"
+				+ "<div class=\"d-flex align-items-right ml-auto align-items-center ml-auto\">"
+				+ "<span class=\"badge badge-danger badge-pill mr-1\">" + errors + "</span>"
+				+ "<span class=\"badge badge-warning badge-pill mr-1\">" + warnings + "</span>"
+				+ "<span class=\"badge badge-primary badge-pill mr-1\">" + (warnings + errors) + "</span>"
+				+ "</div>\n"
+				+ "<span class=\"border-bottom-1\"></span>"
+				+ "</div>";
+	}
+
 	private String listItemBadge(String text, int warnings, int errors) {
 		return "<li class=\"list-group-item d-flex\">"
-				+ "<div>" + text + "</div>\n"
+				+ "<div>"
+				+ text
+				+ "</div>\n"
 				+ "<div class=\"d-flex align-items-right ml-auto align-items-center ml-auto\">"
 				+ "<span class=\"badge badge-danger badge-pill mr-1\">" + errors + "</span>"
 				+ "<span class=\"badge badge-warning badge-pill mr-1\">" + warnings + "</span>"

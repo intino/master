@@ -30,6 +30,8 @@ def type(validator & class)
 	import java.util.Objects;
 	import java.util.stream.Stream;
 
+	import static io.intino.master.data.validation.Issue.Type.*;
+
 	public [ $isAbstract+firstLowerCase] class $abstract+FirstUpperCase~$name+FirstUpperCase~Validator implements RecordValidator {
 
 		protected final Map<String, FieldValidator> validatorsPerField = new java.util.HashMap<>(); {
@@ -62,10 +64,10 @@ def type(attribute & entity) trigger(validationMethod)
 	protected Stream<Issue> validate$name+FirstUpperCase~(List<TripleRecord.Value> values, TripleRecord record, TripleRecordStore store) {
 		[$required+attributeNotDefined]
 		[$optional+attributeNotDefined]
-		if(values.size() > 1) return Stream.of(Issue.error("{"+record.id()+"} " + "$name is defined " + values.size() + " times.").source(values.get(0).source()));
+		if(values.size() > 1) return Stream.of(Issue.error(DUPLICATED_ATTRIBUTE, "{"+record.id()+"} " + "$name is defined " + values.size() + " times.").source(values.get(0).source()));
         return store.get(values.get(0).get()) != null
         	? Stream.empty()
-        	: Stream.of(Issue.error("{"+record.id()+"} " + "$name+FirstUpperCase " + values.get(0).get() + " does not exist.").source(values.get(0).source()));
+        	: Stream.of(Issue.error(INVALID_REFERENCE, "{"+record.id()+"} " + "$name+FirstUpperCase " + values.get(0).get() + " does not exist.").source(values.get(0).source()));
 	}
 end
 
@@ -73,10 +75,10 @@ def type(attribute) !type(string) trigger(validationMethod)
 	protected Stream<Issue> validate$name+FirstUpperCase~(List<TripleRecord.Value> values, TripleRecord record, TripleRecordStore store) {
 		[$required+attributeNotDefined]
 		[$optional+attributeNotDefined]
-		if(values.size() > 1) return Stream.of(Issue.error("{"+record.id()+"} " + "$name is defined " + values.size() + " times.").source(values.get(0).source()));
+		if(values.size() > 1) return Stream.of(Issue.error(DUPLICATED_ATTRIBUTE, "{"+record.id()+"} " + "$name is defined " + values.size() + " times.").source(values.get(0).source()));
 		return is$type+FirstUpperCase~(values.get(0).get())
 			? Stream.empty()
-			: Stream.of(Issue.error("{"+record.id()+"} " + "$name is an invalid $type: " + values.get(0).get()).source(values.get(0).source()));
+			: Stream.of(Issue.error(INVALID_VALUE, "{"+record.id()+"} " + "$name is an invalid $type: " + values.get(0).get()).source(values.get(0).source()));
 	}
 end
 
@@ -84,17 +86,17 @@ def type(attribute) type(string) trigger(validationMethod)
 	protected Stream<Issue> validate$name+FirstUpperCase~(List<TripleRecord.Value> values, TripleRecord record, TripleRecordStore store) {
 		[$required+attributeNotDefined]
 		[$optional+attributeNotDefined]
-		if(values.size() > 1) return Stream.of(Issue.error("{"+record.id()+"} " + "$name is defined " + values.size() + " times.").source(values.get(0).source()));
+		if(values.size() > 1) return Stream.of(Issue.error(DUPLICATED_ATTRIBUTE, "{"+record.id()+"} " + "$name is defined " + values.size() + " times.").source(values.get(0).source()));
 		return Stream.empty();
 	}
 end
 
 def type(required) trigger(attributeNotDefined)
-	if(values.isEmpty() || values.get(0).isEmpty()) return Stream.of(Issue.error("{"+record.id()+"} " + "$name is not defined.").source(record.source()));
+	if(values.isEmpty() || values.get(0).isEmpty()) return Stream.of(Issue.error(MISSING_ATTRIBUTE, "{"+record.id()+"} " + "$name is not defined.").source(record.source()));
 end
 
 def type(optional & warning) trigger(attributeNotDefined)
-	if(values.isEmpty() || values.get(0).isEmpty()) return Stream.of(Issue.warning("{"+record.id()+"} " + "$name is not defined.").source(record.source()));
+	if(values.isEmpty() || values.get(0).isEmpty()) return Stream.of(Issue.warning(MISSING_ATTRIBUTE, "{"+record.id()+"} " + "$name is not defined.").source(record.source()));
 end
 
 def type(optional) trigger(attributeNotDefined)

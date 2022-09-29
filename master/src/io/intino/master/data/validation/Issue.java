@@ -2,25 +2,32 @@ package io.intino.master.data.validation;
 
 import static io.intino.master.data.validation.TripleSource.FileTripleSource;
 import static io.intino.master.data.validation.TripleSource.PublisherTripleSource;
+import static java.util.Objects.requireNonNull;
 
 public class Issue implements Comparable<Issue> {
 
-	public static Issue error(String message) {
-		return new Issue(Level.Error, message);
+	public static Issue error(String type, String message) {
+		return new Issue(type, Level.Error, message);
 	}
 
-	public static Issue warning(String message) {
-		return new Issue(Level.Warning, message);
+	public static Issue warning(String type, String message) {
+		return new Issue(type, Level.Warning, message);
 	}
 
+	private final String type;
 	private final Level level;
 	private final String message;
 	private ValidationLayers.Scope scope;
 	private TripleSource source;
 
-	public Issue(Level level, String message) {
+	public Issue(String type, Level level, String message) {
+		this.type = requireNonNull(type);
 		this.level = level;
 		this.message = message;
+	}
+
+	public String type() {
+		return type;
 	}
 
 	public Level level() {
@@ -46,7 +53,7 @@ public class Issue implements Comparable<Issue> {
 	}
 
 	public String levelMsg() {
-		return "[" + level + "] " + message;
+		return "[" + level.name().toUpperCase() + "] [" + type + "] " + message;
 	}
 
 	@Override
@@ -72,5 +79,14 @@ public class Issue implements Comparable<Issue> {
 
 	public enum Level {
 		Error, Warning
+	}
+
+	public static class Type {
+		public static final String SYNTAX_ERROR = "Syntax error";
+		public static final String NO_TYPE = "No type";
+		public static final String MISSING_ATTRIBUTE = "Missing attribute";
+		public static final String DUPLICATED_ATTRIBUTE = "Duplicated attribute";
+		public static final String INVALID_VALUE = "Invalid value";
+		public static final String INVALID_REFERENCE = "Invalid reference";
 	}
 }

@@ -13,7 +13,7 @@ public class Server {
 
         MasterConfig config = new MasterConfig();
         config.port(60555);
-        config.dataDirectory(new File("temp/cinepolis-data/datasets"));
+        config.dataDirectory(new File("temp/cinepolis-data"));
         config.logDirectory(new File("temp/logs/master"));
         config.validationLayers().recordValidationLayer(new TestRecordValidationLayer().addValidator(new DuplicatedTripleRecordValidator()));
         config.instanceName("master-test");
