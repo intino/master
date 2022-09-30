@@ -52,6 +52,7 @@ public class DataLoader {
 	}
 
 	private Map<String, TripleRecord> transform(Map<String, TripleRecord> records) {
+		if(records == null) return null;
 		return transformer != null ? transformer.transform(records) : records;
 	}
 
