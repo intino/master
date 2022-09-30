@@ -1,5 +1,6 @@
 package io.intino.master.core;
 
+import io.intino.master.data.RecordTransformer;
 import io.intino.master.data.validation.ValidationLayers;
 import io.intino.master.serialization.MasterSerializer;
 import io.intino.master.serialization.MasterSerializers;
@@ -18,6 +19,7 @@ public class MasterConfig {
 	private String host = "localhost";
 	private MasterSerializer serializer = MasterSerializers.getDefault();
 	private ValidationLayers validationLayers = ValidationLayers.createDefault();
+	private RecordTransformer transformer = RecordTransformer.dummy();
 
 	public MasterConfig() {
 	}
@@ -95,6 +97,15 @@ public class MasterConfig {
 
 	public MasterConfig validationLayers(ValidationLayers validationLayers) {
 		this.validationLayers = validationLayers;
+		return this;
+	}
+
+	public RecordTransformer transformer() {
+		return transformer;
+	}
+
+	public MasterConfig transformer(RecordTransformer transformer) {
+		this.transformer = transformer;
 		return this;
 	}
 

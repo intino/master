@@ -1,11 +1,11 @@
 package io.intino.master.data;
 
-import io.intino.master.data.validation.report.IssueReport;
 import io.intino.master.data.validation.RecordValidator.TripleRecord;
 import io.intino.master.data.validation.RecordValidator.TripleRecord.Value;
 import io.intino.master.data.validation.TripleRecordStore;
 import io.intino.master.data.validation.TripleSource;
 import io.intino.master.data.validation.ValidationLayers;
+import io.intino.master.data.validation.report.IssueReport;
 import io.intino.master.model.Triple;
 import io.intino.master.serialization.MasterSerializer;
 
@@ -25,24 +25,34 @@ public class DataLoader {
 
 	public static final String TRIPLES_EXTENSION = ".triples";
 
-	public static MasterLoadResult load(File rootDir, ValidationLayers validationLayers, MasterSerializer serializer) {
-		return new DataLoader().loadData(rootDir, validationLayers, serializer);
+	public static MasterLoadResult load(File rootDir, ValidationLayers validationLayers, RecordTransformer transformer, MasterSerializer serializer) {
+		return new DataLoader(validationLayers, transformer, serializer).loadData(rootDir);
 	}
 
-	private final MasterLoadResult result = new MasterLoadResult();
-	private ValidationLayers validationLayers;
+	private MasterLoadResult result;
+	private final ValidationLayers validationLayers;
+	private final RecordTransformer transformer;
+	private final MasterSerializer serializer;
 
-	private DataLoader() {}
+	private DataLoader(ValidationLayers validationLayers, RecordTransformer transformer, MasterSerializer serializer) {
+		this.validationLayers = validationLayers;
+		this.transformer = transformer;
+		this.serializer = requireNonNull(serializer);
+	}
 
-	public MasterLoadResult loadData(File rootDir, ValidationLayers validationLayers, MasterSerializer serializer) {
-		this.validationLayers = requireNonNull(validationLayers);
-		result.data = normalize(validateRecords(loadRecordsFromDisk(rootDir)), serializer);
+	public MasterLoadResult loadData(File rootDir) {
+		result = new MasterLoadResult();
+		result.data = serialize(transform(validateRecords(loadRecordsFromDisk(rootDir))));
 		return result;
 	}
 
-	private Map<String, String> normalize(Map<String, TripleRecord> records, MasterSerializer serializer) {
+	private Map<String, String> serialize(Map<String, TripleRecord> records) {
 		if(records == null) return null;
 		return records.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> serializer.serialize(getAttributes(e.getValue()))));
+	}
+
+	private Map<String, TripleRecord> transform(Map<String, TripleRecord> records) {
+		return transformer != null ? transformer.transform(records) : records;
 	}
 
 	private Map<String, String> getAttributes(TripleRecord value) {
@@ -54,6 +64,7 @@ public class DataLoader {
 	}
 
 	private Map<String, TripleRecord> validateRecords(Map<String, TripleRecord> records) {
+		if(validationLayers == null) return records;
 		result.issues.put(validationLayers.recordValidationLayer().validate(store(records)));
 		if(result.issues.errorCount() > 0) return null;
 		return records;

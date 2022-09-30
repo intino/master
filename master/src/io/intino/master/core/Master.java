@@ -8,6 +8,7 @@ import com.hazelcast.map.IMap;
 import com.hazelcast.topic.Message;
 import io.intino.alexandria.logger.Logger;
 import io.intino.master.data.DataLoader;
+import io.intino.master.data.RecordTransformer;
 import io.intino.master.data.validation.*;
 import io.intino.master.data.validation.report.IssueReport;
 import io.intino.master.io.TriplesFileReader;
@@ -89,7 +90,7 @@ public class Master {
 		long start = System.currentTimeMillis();
 		int numTriples;
 
-		DataLoader.MasterLoadResult result = DataLoader.load(config.dataDirectory(), validationLayers, serializer());
+		DataLoader.MasterLoadResult result = DataLoader.load(config.dataDirectory(), validationLayers, transformer(), serializer());
 
 		if(result.issues().errorCount() > 0)
 			loadFail(result);
@@ -218,8 +219,12 @@ public class Master {
 		}
 	}
 
-	private MasterSerializer serializer() {
+	public MasterSerializer serializer() {
 		return config.serializer();
+	}
+
+	public RecordTransformer transformer() {
+		return config.transformer();
 	}
 
 	public ValidationLayers validationLayers() {
