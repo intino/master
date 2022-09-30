@@ -77,6 +77,7 @@ public class IssueReport {
 
 	public void save(File file) {
 		new HtmlIssueReportDocumentBuilder(this).build(file);
+		new TxtIssueReportDocumentBuilder(this).build(file);
 	}
 
 	public static class IssuesCount implements Comparable<IssuesCount> {

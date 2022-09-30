@@ -14,6 +14,10 @@ public class Issue implements Comparable<Issue> {
 		return new Issue(type, Level.Warning, message);
 	}
 
+	public static Issue create(Level level, String type, String message) {
+		return new Issue(type, level, message);
+	}
+
 	private final String type;
 	private final Level level;
 	private final String message;
@@ -83,7 +87,7 @@ public class Issue implements Comparable<Issue> {
 
 	public static class Type {
 		public static final String SYNTAX_ERROR = "Syntax error";
-		public static final String NO_TYPE = "No type";
+		public static final String SUBJECT_WITHOUT_TYPE = "Subject without type";
 		public static final String MISSING_ATTRIBUTE = "Missing attribute";
 		public static final String DUPLICATED_ATTRIBUTE = "Duplicated attribute";
 		public static final String INVALID_VALUE = "Invalid value";

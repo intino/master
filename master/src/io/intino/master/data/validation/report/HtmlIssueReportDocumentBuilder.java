@@ -39,7 +39,8 @@ public class HtmlIssueReportDocumentBuilder {
 		template.set("sources-count", String.valueOf(issueReport.getAll().size()));
 
 		template.set("issues", renderIssues());
-		template.set("issues-chart-data", renderIssuesChartData());
+		template.set("issues-levels-chart-data", renderIssuesLevelsChartData());
+		template.set("issues-types-chart-data", renderIssuesTypesChartData());
 		template.set("content", renderContent());
 
 		builder.append(template.html());
@@ -147,7 +148,24 @@ public class HtmlIssueReportDocumentBuilder {
 		return sb.toString();
 	}
 
-	private String renderIssuesChartData() {
+	private String renderIssuesLevelsChartData() {
+		StringBuilder sb = new StringBuilder();
+		int errors = issueReport.errorCount();
+		int warnings = issueReport.warningCount();
+		float total = errors + warnings;
+
+		sb.append("{ name: '").append("Errors").append("'")
+				.append(", y: ").append(String.format("%.02f", errors / total * 100).replace(",", "."))
+				.append("},");
+
+		sb.append("{ name: '").append("Warnings").append("'")
+				.append(", y: ").append(String.format("%.02f", warnings / total * 100).replace(",", "."))
+				.append("}");
+
+		return sb.toString();
+	}
+
+	private String renderIssuesTypesChartData() {
 		StringBuilder sb = new StringBuilder();
 		float total = issueReport.count();
 		boolean first = true;
@@ -167,20 +185,6 @@ public class HtmlIssueReportDocumentBuilder {
 
 	private int numErrors(List<Issue> issueList) {
 		return (int) issueList.stream().filter(issue -> issue.level().equals(Issue.Level.Error)).count();
-	}
-
-	private String itemBadge(String text, int warnings, int errors) {
-		return "<div class=\"d-flex\">"
-				+ "<div>"
-				+ text
-				+ "</div>\n"
-				+ "<div class=\"d-flex align-items-right ml-auto align-items-center ml-auto\">"
-				+ "<span class=\"badge badge-danger badge-pill mr-1\">" + errors + "</span>"
-				+ "<span class=\"badge badge-warning badge-pill mr-1\">" + warnings + "</span>"
-				+ "<span class=\"badge badge-primary badge-pill mr-1\">" + (warnings + errors) + "</span>"
-				+ "</div>\n"
-				+ "<span class=\"border-bottom-1\"></span>"
-				+ "</div>";
 	}
 
 	private String listItemBadge(String text, int warnings, int errors) {
