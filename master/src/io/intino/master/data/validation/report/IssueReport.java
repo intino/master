@@ -76,7 +76,7 @@ public class IssueReport {
 	}
 
 	public void save(File file) {
-		new HtmlIssueReportDocumentBuilder(this).build(file);
+		new HtmlIssueReportDocumentBuilder(this).build(new File(file.getAbsolutePath().replace(".txt", ".html")));
 		new TxtIssueReportDocumentBuilder(this).build(new File(file.getAbsolutePath().replace(".html", ".txt")));
 	}
 

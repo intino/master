@@ -21,12 +21,12 @@ import java.util.stream.Stream;
 
 import static java.util.Objects.requireNonNull;
 
-public class DataLoader {
+public class DefaultDatalakeLoader implements DatalakeLoader {
 
 	public static final String TRIPLES_EXTENSION = ".triples";
 
 	public static MasterLoadResult load(File rootDir, ValidationLayers validationLayers, RecordTransformer transformer, MasterSerializer serializer) {
-		return new DataLoader(validationLayers, transformer, serializer).loadData(rootDir);
+		return new DefaultDatalakeLoader(validationLayers, transformer, serializer).loadData(rootDir);
 	}
 
 	private MasterLoadResult result;
@@ -34,7 +34,7 @@ public class DataLoader {
 	private final RecordTransformer transformer;
 	private final MasterSerializer serializer;
 
-	private DataLoader(ValidationLayers validationLayers, RecordTransformer transformer, MasterSerializer serializer) {
+	private DefaultDatalakeLoader(ValidationLayers validationLayers, RecordTransformer transformer, MasterSerializer serializer) {
 		this.validationLayers = validationLayers;
 		this.transformer = transformer;
 		this.serializer = requireNonNull(serializer);
@@ -124,6 +124,11 @@ public class DataLoader {
 		triples.add(new AbstractMap.SimpleEntry<>(new Triple(line), source));
 
 		++result.triplesRead;
+	}
+
+	@Override
+	public Map<String, Map<String, String>> load(File rootDirectory) {
+		return null;
 	}
 
 	public static class MasterLoadResult {

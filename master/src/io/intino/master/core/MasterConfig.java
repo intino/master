@@ -1,5 +1,7 @@
 package io.intino.master.core;
 
+import io.intino.master.data.DatalakeLoader;
+import io.intino.master.data.DefaultDatalakeLoader;
 import io.intino.master.data.RecordTransformer;
 import io.intino.master.data.validation.ValidationLayers;
 import io.intino.master.serialization.MasterSerializer;
@@ -20,6 +22,7 @@ public class MasterConfig {
 	private MasterSerializer serializer = MasterSerializers.getDefault();
 	private ValidationLayers validationLayers = ValidationLayers.createDefault();
 	private RecordTransformer transformer = RecordTransformer.dummy();
+	private DatalakeLoader datalakeLoader;
 
 	public MasterConfig() {
 	}
@@ -31,6 +34,7 @@ public class MasterConfig {
 		this.port = Integer.parseInt(arguments.getOrDefault("port", String.valueOf(port)));
 		this.serializer = MasterSerializers.get(arguments.getOrDefault("serializer", MasterSerializers.Standard.getDefault()));
 		this.host = arguments.getOrDefault("host", host);
+//		this.datalakeLoader = new DefaultDatalakeLoader();
 	}
 
 	public MasterConfig(String[] args) {

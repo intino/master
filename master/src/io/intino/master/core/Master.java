@@ -7,7 +7,7 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.map.IMap;
 import com.hazelcast.topic.Message;
 import io.intino.alexandria.logger.Logger;
-import io.intino.master.data.DataLoader;
+import io.intino.master.data.DefaultDatalakeLoader;
 import io.intino.master.data.RecordTransformer;
 import io.intino.master.data.validation.*;
 import io.intino.master.data.validation.report.IssueReport;
@@ -90,7 +90,7 @@ public class Master {
 		long start = System.currentTimeMillis();
 		int numTriples;
 
-		DataLoader.MasterLoadResult result = DataLoader.load(config.dataDirectory(), validationLayers, transformer(), serializer());
+		DefaultDatalakeLoader.MasterLoadResult result = DefaultDatalakeLoader.load(config.dataDirectory(), validationLayers, transformer(), serializer());
 
 		if(result.issues().errorCount() > 0)
 			loadFail(result);
@@ -113,7 +113,7 @@ public class Master {
 		issues.save(issuesFile());
 	}
 
-	private void loadFail(DataLoader.MasterLoadResult result) {
+	private void loadFail(DefaultDatalakeLoader.MasterLoadResult result) {
 		saveIssuesReport(result.issues());
 		throw new MasterInitializationException("Failed to load data because there were " + result.issues().errorCount() + " errors. See " + issuesFile() + " for more info");
 	}

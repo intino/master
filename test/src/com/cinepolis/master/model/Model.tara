@@ -125,3 +125,32 @@ Entity DualAsset as ExtensionOf(Asset)
 //	Attribute missingAssets as String List
 //	Attribute attribute as Function(key as String) -> String
 
+Entity CheckField is decorable component
+	Attribute name as String
+	Attribute type as Word("String" "Number" "Date" "Option" "MultiOption" "Image" "Entity" "Package" "Note" "Marker" "Section" "Validation" "Signature")
+	Attribute code as String
+	Attribute optional as Boolean
+	Attribute conditional as String
+
+Entity OrderType is decorable
+	Attribute code as String
+    Attribute labelEn as String
+    Attribute labelEs as String
+    Attribute labelPt as String
+    Attribute hintEn as String
+    Attribute hintEs as String
+    Attribute hintPt as String
+    Attribute target as Word("theater" "screen" "lamp" "projector" "player")
+    Attribute effort as Integer
+    Attribute input as String
+    Attribute calculations as String
+    Attribute annexes as String
+    Attribute channel as Word("web" "app" "both")
+    Attribute assertionCode as String
+    Attribute parent as String
+    Attribute checklist as Entity(CheckField) List
+    Attribute booleanList as Boolean List
+    Attribute intList as Integer List
+    Attribute doubleList as Double List
+    Attribute stringList as String List
+    Attribute entityList as Entity(Theater) List

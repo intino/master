@@ -37,6 +37,7 @@ public class MasterNodeCodeGenerationOperation extends ModelOperation {
 	private final Template entityTemplate;
 	private final Template validatorTemplate;
 	private final Template structTemplate;
+	private final Map<String, Node> entities = new HashMap<>();
 
 	public MasterNodeCodeGenerationOperation(CompilationUnit unit) {
 		super(unit);
@@ -71,6 +72,10 @@ public class MasterNodeCodeGenerationOperation extends ModelOperation {
 	}
 
 	private void createEntities(Model model) {
+		model.components().stream()
+				.filter(MasterNodeCodeGenerationOperation::isEntity)
+				.forEach(node -> entities.put(node.name(), node));
+
 		final Map<String, Map<String, String>> outputs = createEntityClasses(model);
 		fillOutMap(outputs);
 		outputs.values().forEach(this::write);
@@ -91,9 +96,16 @@ public class MasterNodeCodeGenerationOperation extends ModelOperation {
 	private Map<String, Map<String, String>> createEntityClasses(Model model) {
 		Map<String, Map<String, String>> outputs = new HashMap<>();
 		model.components().stream()
-				.filter(node -> node.type().equals("Entity") && ((NodeImpl) node).isDirty() && !((NodeImpl) node).isVirtual())
+				.filter(MasterNodeCodeGenerationOperation::isEntity)
 				.forEach(node -> renderEntityAndValidator(outputs, node));
 		return outputs;
+	}
+
+	private static boolean isEntity(Node node) {
+		return node.type().equals("Entity")
+				&& ((NodeImpl) node).isDirty()
+				&& !((NodeImpl) node).isVirtual();
+				//&& node.flags().stream().noneMatch(t -> t.name().equals("Component"));
 	}
 
 	private void renderEntityAndValidator(Map<String, Map<String, String>> outputs, Node node) {
@@ -126,8 +138,8 @@ public class MasterNodeCodeGenerationOperation extends ModelOperation {
 	}
 
 	private Map<String, Map<String, String>> createMasterClass(Model model) {
-		String cQn = conf.workingPackage() + DOT + firstUpperCase().format(javaValidName().format("CachedMasterClient").toString());
-		String lQn = conf.workingPackage() + DOT + firstUpperCase().format(javaValidName().format("LazyMasterClient").toString());
+		String cQn = conf.workingPackage() + DOT + firstUpperCase().format(javaValidName().format("FullLoadMasterClient").toString());
+		String lQn = conf.workingPackage() + DOT + firstUpperCase().format(javaValidName().format("LazyLoadMasterClient").toString());
 		String iQn = conf.workingPackage() + DOT + firstUpperCase().format(javaValidName().format("MasterClient").toString());
 
 		return Map.of(model.components().get(0).file(),
@@ -177,7 +189,7 @@ public class MasterNodeCodeGenerationOperation extends ModelOperation {
 	}
 
 	private void renderEntityNode(Map<String, Map<String, String>> map, Node node) {
-		Map<String, Frame> frames = new EntityFrameCreator(conf).create(node);
+		Map<String, Frame> frames = new EntityFrameCreator(conf, entities).create(node);
 		if (!map.containsKey(node.file())) map.put(node.file(), new LinkedHashMap<>());
 		frames.forEach((path, frame) -> {
 			String destination = entityDestination(path, frame);

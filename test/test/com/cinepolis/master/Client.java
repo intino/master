@@ -18,6 +18,7 @@ public class Client {
 	private static long blackhole = new Random().nextLong();
 
 	public static void main(String[] args) {
+
 		test("Cached", () -> new CachedMasterClient(config(MasterClient.Type.Cached)));
 		test("Lazy", () -> new LazyMasterClient(config(MasterClient.Type.Lazy)));
 

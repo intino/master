@@ -17,8 +17,8 @@ def type(master & interface)
 		}
 
 		static MasterClient create(MasterClient.Config config) {
-			if(config.type() == Type.Cached) return new CachedMasterClient(config);
-			if(config.type() == Type.Lazy) return new LazyMasterClient(config);
+			if(config.type() == Type.FullLoad) return new FullLoadMasterClient(config);
+			if(config.type() == Type.LazyLoad) return new LazyLoadMasterClient(config);
 			throw new IllegalArgumentException("Unknown MasterClient type " + config.type());
 		}
 
@@ -31,11 +31,22 @@ def type(master & interface)
 
 		void addEntryListener(EntryListener<String, String> listener);
 
+		io.intino.master.serialization.MasterSerializer serializer();
+
 		$entity+getterSignature...[$NL$NL]
 
 		enum Type {
-    		Cached, Lazy;
-    		public static Type getDefault() {return Cached;}
+			/**
+			* <p>All records will be loaded into local-memory maps on start.</p>
+			*/
+    		FullLoad,
+
+    		/**
+    		* <p>Records will be loaded from the master backend on demand.</p>
+    		*/
+    		LazyLoad;
+
+    		public static Type getDefault() {return FullLoad;}
     		public static Type byName(String name) {return Arrays.stream(values()).filter(e -> e.name().equalsIgnoreCase(name)).findFirst().orElse(null);}
     	}
 
@@ -131,14 +142,14 @@ def type(master & cached)
 	import java.util.logging.Level;
 	import java.util.logging.LogManager;
 
-	public class CachedMasterClient implements MasterClient {
+	public class FullLoadMasterClient implements MasterClient {
 
     	$entity+map...[$NL]
 
     	private final MasterClient.Config config;
 		private HazelcastInstance hazelcast;
 
-    	public CachedMasterClient(MasterClient.Config config) {
+    	public FullLoadMasterClient(MasterClient.Config config) {
     		this.config = requireNonNull(config);
     	}
 
@@ -159,6 +170,12 @@ def type(master & cached)
     	public void addEntryListener(EntryListener<String, String> listener) {
     		hazelcast.<String, String>getMap(MASTER_MAP_NAME).addEntryListener(listener, true);
     	}
+
+		@Override
+    	public MasterSerializer serializer() {
+        	IMap<String, String> metadata = hazelcast.getMap(METADATA_MAP_NAME);
+        	return MasterSerializers.get(metadata.get("serializer"));
+        }
 
     	@Override
     	public MasterClient.Config config() {
@@ -242,11 +259,6 @@ def type(master & cached)
 			rootLogger.addHandler(handler);
 		}
 
-		private MasterSerializer serializer() {
-        	IMap<String, String> metadata = hazelcast.getMap(METADATA_MAP_NAME);
-        	return MasterSerializers.get(metadata.get("serializer"));
-        }
-
     	public class TripleEntryDispatcher extends EntryAdapter<String, String> {
 
 			@Override
@@ -313,14 +325,14 @@ def type(master & lazy)
 	import java.util.logging.Level;
 	import java.util.logging.LogManager;
 
-	public class LazyMasterClient implements MasterClient {
+	public class LazyLoadMasterClient implements MasterClient {
 
     	private final MasterClient.Config config;
 		private HazelcastInstance hazelcast;
 		private IMap<String, String> masterMap;
 		private MasterSerializer serializer;
 
-    	public LazyMasterClient(MasterClient.Config config) {
+    	public LazyLoadMasterClient(MasterClient.Config config) {
     		this.config = requireNonNull(config);
     	}
 
@@ -339,6 +351,11 @@ def type(master & lazy)
     	public void addEntryListener(EntryListener<String, String> listener) {
     		hazelcast.<String, String>getMap(MASTER_MAP_NAME).addEntryListener(listener, true);
     	}
+
+    	@Override
+        public MasterSerializer serializer() {
+        	return serializer;
+        }
 
     	@Override
     	public MasterClient.Config config() {

@@ -30,14 +30,16 @@ public class EntityFrameCreator {
 			"String", "List<String>",
 			"Double", "List<Double>",
 			"Integer", "List<Integer>",
-			"Boolean", "List<Boolean",
+			"Boolean", "List<Boolean>",
 			"Entity", "List<io.intino.master.model.Entity>",
 			"Long", "List<Long>"
 	);
 	private final CompilerConfiguration conf;
+	private final Map<String, Node> entities;
 
-	public EntityFrameCreator(CompilerConfiguration conf) {
+	public EntityFrameCreator(CompilerConfiguration conf, Map<String, Node> entities) {
 		this.conf = conf;
+		this.entities = entities;
 	}
 
 	public Map<String, Frame> create(Node node) {
@@ -66,6 +68,11 @@ public class EntityFrameCreator {
 		String type = type(node);
 		builder.add("name", node.name()).add("owner", node.container().name()).add("type", type).add("package", conf.workingPackage());
 		builder.add("index", node.container().components().indexOf(node));
+		processParameters(node, builder, type);
+		return builder.toFrame();
+	}
+
+	private void processParameters(Node node, FrameBuilder builder, String type) {
 		Parameter values = parameter(node, "values");
 		if (values != null) builder.add("value", values.values().stream().map(Object::toString).toArray());
 		Parameter defaultValue = parameter(node, "defaultValue");
@@ -74,11 +81,17 @@ public class EntityFrameCreator {
 		if (format != null) builder.add("format", format.values().get(0));
 		else if(type.startsWith("Date")) builder.add("format", defaultFormat(type));
 		Parameter entity = parameter(node, "entity");
-		if (entity != null) builder.add("entity", ((Node) entity.values().get(0)).name());
+		if (entity != null) {
+			String name = ((Node) entity.values().get(0)).name();
+			builder.add("entity", name);
+			Node entityNode = entities.get(name);
+			if(entityNode != null && entityNode.flags().stream().anyMatch(t -> t.name().equals("Component"))) {
+				builder.add("component");
+			}
+		}
 		Parameter struct = parameter(node, "struct");
 		if (struct != null) builder.add("struct", structFrame(((Node) struct.values().get(0))));
 		builder.add("attribute", builder.toFrame());
-		return builder.toFrame();
 	}
 
 	private String defaultFormat(String type) { // TODO: try get from master model
