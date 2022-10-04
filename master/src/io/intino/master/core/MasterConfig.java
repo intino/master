@@ -20,9 +20,8 @@ public class MasterConfig {
 	private int port = 5701;
 	private String host = "localhost";
 	private MasterSerializer serializer = MasterSerializers.getDefault();
-	private ValidationLayers validationLayers = ValidationLayers.createDefault();
 	private RecordTransformer transformer = RecordTransformer.dummy();
-	private DatalakeLoader datalakeLoader;
+	private DatalakeLoader datalakeLoader = DatalakeLoader.createDefault();
 
 	public MasterConfig() {
 	}
@@ -34,7 +33,6 @@ public class MasterConfig {
 		this.port = Integer.parseInt(arguments.getOrDefault("port", String.valueOf(port)));
 		this.serializer = MasterSerializers.get(arguments.getOrDefault("serializer", MasterSerializers.Standard.getDefault()));
 		this.host = arguments.getOrDefault("host", host);
-//		this.datalakeLoader = new DefaultDatalakeLoader();
 	}
 
 	public MasterConfig(String[] args) {
@@ -95,15 +93,6 @@ public class MasterConfig {
 		return this;
 	}
 
-	public ValidationLayers validationLayers() {
-		return validationLayers;
-	}
-
-	public MasterConfig validationLayers(ValidationLayers validationLayers) {
-		this.validationLayers = validationLayers;
-		return this;
-	}
-
 	public RecordTransformer transformer() {
 		return transformer;
 	}
@@ -118,5 +107,14 @@ public class MasterConfig {
 				s -> s[0].trim(),
 				s -> s[1].trim()
 		));
+	}
+
+	public DatalakeLoader datalakeLoader() {
+		return datalakeLoader;
+	}
+
+	public MasterConfig datalakeLoader(DatalakeLoader datalakeLoader) {
+		this.datalakeLoader = datalakeLoader;
+		return this;
 	}
 }

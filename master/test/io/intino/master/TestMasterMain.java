@@ -26,6 +26,18 @@ public class TestMasterMain {
 		config.serializer(MasterSerializers.getDefault());
 		config.port(62555);
 
+		Master master = new Master(config);
+		master.start();
+	}
+
+	public static void main1(String[] args) {
+		MasterConfig config = new MasterConfig();
+		config.dataDirectory(new File("temp/cinepolis-data/datasets"));
+		config.logDirectory(new File("temp/logs/master"));
+		config.instanceName("Master");
+		config.serializer(MasterSerializers.getDefault());
+		config.port(62555);
+
 		ValidationLayers validationLayers = new ValidationLayers();
 		validationLayers.tripleValidationLayer().addValidator(new SyntaxTripleValidator());
 
@@ -36,13 +48,13 @@ public class TestMasterMain {
 			return Stream.empty();
 		});
 
-		config.validationLayers(validationLayers);
+//		config.validationLayers(validationLayers);
 
 		Master master = new Master(config);
 		master.start();
 
 		master.add("test", "Hola\tQu e\tTal");
-		master.add("test", new Triple("1234567:theater", "ipSegment", "123"));
+//		master.add("test", new Triple("1234567:theater", "ipSegment", "123"));
 	}
 
 	private static Stream<Issue> validateTheaterIpSegment(Triple triple, TripleSource source) {

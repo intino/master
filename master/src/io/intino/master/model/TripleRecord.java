@@ -1,5 +1,6 @@
 package io.intino.master.model;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -13,6 +14,10 @@ public class TripleRecord {
 		this.attributes = attributes;
 	}
 
+	public TripleRecord(String id) {
+		this(id, new LinkedHashMap<>());
+	}
+
 	public String id() {
 		return id;
 	}
@@ -23,6 +28,10 @@ public class TripleRecord {
 
 	public Map<String, String> attributes() {
 		return attributes;
+	}
+
+	public void setAttribute(String name, String value) {
+		attributes.put(name, value);
 	}
 
 	public Stream<Triple> triples() {
