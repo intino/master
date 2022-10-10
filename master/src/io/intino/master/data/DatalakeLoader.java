@@ -1,6 +1,7 @@
 package io.intino.master.data;
 
 import io.intino.master.model.TripleRecord;
+import io.intino.master.serialization.MasterSerializer;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -14,7 +15,7 @@ public interface DatalakeLoader {
 		return new DefaultDatalakeLoader();
 	}
 
-	LoadResult load(File rootDirectory);
+	LoadResult load(File rootDirectory, MasterSerializer serializer);
 
 	interface LoadResult {
 		static WritableLoadResult create() {

@@ -149,6 +149,7 @@ Entity OrderType is decorable
     Attribute assertionCode as String
     Attribute parent as String
     Attribute checklist as Entity(CheckField) List
+    Attribute singleCheck as Entity(CheckField)
     Attribute booleanList as Boolean List
     Attribute intList as Integer List
     Attribute doubleList as Double List

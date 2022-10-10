@@ -91,7 +91,7 @@ public class Master {
 		long start = System.currentTimeMillis();
 		int numTriples;
 
-		DatalakeLoader.LoadResult result = config.datalakeLoader().load(config.dataDirectory());
+		DatalakeLoader.LoadResult result = config.datalakeLoader().load(config.dataDirectory(), serializer());
 
 		numTriples = (int) result.triplesRead();
 

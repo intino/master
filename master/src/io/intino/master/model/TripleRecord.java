@@ -12,6 +12,7 @@ public class TripleRecord {
 	public TripleRecord(String id, Map<String, String> attributes) {
 		this.id = id;
 		this.attributes = attributes;
+		this.attributes.put("id", id);
 	}
 
 	public TripleRecord(String id) {
@@ -28,6 +29,10 @@ public class TripleRecord {
 
 	public Map<String, String> attributes() {
 		return attributes;
+	}
+
+	public String getAttribute(String name) {
+		return attributes.get(name);
 	}
 
 	public void setAttribute(String name, String value) {

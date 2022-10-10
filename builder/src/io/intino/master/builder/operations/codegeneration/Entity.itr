@@ -174,6 +174,16 @@ def type(string) trigger(add)
 	this.$name+firstLowerCase = triple.value();
 end
 
+def type(entity) type(component) trigger(add)
+	if(triple.value() == null) {
+		this.$name+firstLowerCase = null;
+		return;
+	}
+
+	Map<String, String> attributes = master.serializer().deserialize(triple.value().trim());
+	this.$name+firstLowerCase = new $entity+FirstUpperCase(attributes.get("id"), master);
+end
+
 def type(entity) trigger(add)
 	this.$name+firstLowerCase~Reference = triple.value();
 end

@@ -76,7 +76,7 @@ def type(attribute) !type(string) trigger(validationMethod)
 		[$required+attributeNotDefined]
 		[$optional+attributeNotDefined]
 		if(values.size() > 1) return Stream.of(Issue.error(DUPLICATED_ATTRIBUTE, "{"+record.id()+"} " + "$name is defined " + values.size() + " times.").source(values.get(0).source()));
-		return is$type+FirstUpperCase~(values.get(0).get())
+		return is$typename+FirstUpperCase~(values.get(0).get())
 			? Stream.empty()
 			: Stream.of(Issue.error(INVALID_VALUE, "{"+record.id()+"} " + "$name is an invalid $type: " + values.get(0).get()).source(values.get(0).source()));
 	}
@@ -140,6 +140,20 @@ def type(type) type(instant) trigger(checkType)
 	protected boolean is$name+FirstUpperCase~(String value) {
 		try {
 			java.time.Instant.ofEpochMilli(Long.parseLong(value));
+			return true;
+		} catch(Exception e) {
+		 	return false;
+		}
+	}
+end
+
+def type(type) type(list) trigger(checkType)
+	protected boolean is$name+FirstUpperCase~(String value) {
+		try {
+			List<String> list = java.util.Arrays.stream(value.split(";"));
+			for(String item : list)
+				if(!is$typeParameter+FirstUpperCase(item))
+					return false;
 			return true;
 		} catch(Exception e) {
 		 	return false;

@@ -75,7 +75,10 @@ public class ValidatorFrameCreator {
 		String type = type(node);
 		if(!processedTypes.add(type)) return null;
 
-		FrameBuilder builder = new FrameBuilder("type", type).add("name", type).add("nameBoxed", boxed(type));
+		FrameBuilder builder = new FrameBuilder("type", type)
+				.add("typename", typename(type))
+				.add("name", typename(type))
+				.add("nameBoxed", boxed(type));
 
 		if(node.appliedAspects().stream().anyMatch(a -> a.type().equals("Word")))
 			builder.add("word").add("package", conf.workingPackage() + ".entities." + parent.name());
@@ -84,6 +87,11 @@ public class ValidatorFrameCreator {
 		if (struct != null) builder.add("struct").add("struct").add("struct", structFrame(((Node) struct.values().get(0))));
 
 		return builder.toFrame();
+	}
+
+	private String typename(String type) {
+		if(!type.contains("<")) return type;
+		return type.substring(0, type.indexOf('<'));
 	}
 
 	private String nameBoxed(String type) {
@@ -100,6 +108,8 @@ public class ValidatorFrameCreator {
 		String type = type(node);
 		builder.add("name", node.name()).add("owner", node.container().name()).add("type", type).add("package", conf.workingPackage());
 		builder.add("index", node.container().components().indexOf(node));
+
+		builder.add("typename", typename(type));
 
 		boolean optional = node.appliedAspects().stream().anyMatch(a -> a.type().equals("Optional"));
 		if(optional) builder.add("optional", new FrameBuilder("optional", "warning").add("name", node.name()).toFrame());
